@@ -1,0 +1,274 @@
+/* =========================
+   HEADER
+========================= */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand img {
+  height: 48px;
+}
+
+.brand-text h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.brand-text p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* =========================
+   HEADER ACTIONS
+========================= */
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Calendar icon button */
+.icon-btn {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.icon-btn:hover {
+  background-color: rgba(11, 94, 215, 0.1);
+}
+
+/* =========================
+   THEME TOGGLE SWITCH
+========================= */
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--primary);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+
+.layout {
+  display: flex;
+  min-height: calc(100vh - 72px);
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+  width: 220px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+}
+
+.nav-btn {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.nav-btn:hover {
+  background-color: rgba(11, 94, 215, 0.08);
+}
+
+.nav-btn.active {
+  background-color: var(--primary);
+  color: white;
+}
+
+/* =========================
+   CONTENT AREA
+========================= */
+
+.content {
+  flex: 1;
+  padding: 24px;
+}
+
+/* =========================
+   FILTERS
+========================= */
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+}
+
+.filter-group input,
+.filter-group select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.table-section {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background-color: rgba(11, 94, 215, 0.06);
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background-color: rgba(11, 94, 215, 0.04);
+}
+
+/* =========================
+   ACTION BUTTON
+========================= */
+
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--primary);
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.action-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .nav-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .topbar {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-text h1 {
+    font-size: 15px;
+  }
+
+  .brand img {
+    height: 40px;
+  }
+
+  th,
+  td {
+    font-size: 13px;
+  }
+}
