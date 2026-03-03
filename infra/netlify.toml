@@ -1,0 +1,19 @@
+# Netlify deployment configuration for the Next.js frontend
+
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_PUBLIC_API_URL = "https://your-backend.onrender.com"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Redirect all routes to Next.js (handled by plugin)
+[[redirects]]
+  from   = "/*"
+  to     = "/.netlify/functions/___netlify-handler"
+  status = 200

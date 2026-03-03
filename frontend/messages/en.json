@@ -1,0 +1,139 @@
+{
+    "nav": {
+        "dashboard": "Dashboard",
+        "upload": "Upload Report",
+        "analysis": "Analysis",
+        "compare": "Compare",
+        "reports": "Reports",
+        "settings": "Settings"
+    },
+    "header": {
+        "title": "Digital Governance Intelligence Portal",
+        "subtitle": "National e-Governance Division (NeGD), MeitY"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "totalReports": "Total Reports",
+        "statesSubmitted": "States Submitted",
+        "pendingStates": "Pending States",
+        "lastUpdated": "Last Updated",
+        "recentUploads": "Recent Uploads",
+        "pendingStatesList": "Pending Submissions",
+        "noReports": "No reports uploaded yet.",
+        "status": {
+            "indexed": "Indexed",
+            "processing": "Processing",
+            "pending": "Pending",
+            "failed": "Failed"
+        }
+    },
+    "upload": {
+        "title": "Upload Report",
+        "subtitle": "Upload state monthly progress reports for indexing and analysis",
+        "dragDrop": "Drag & drop your file here, or click to select",
+        "fileTypes": "Supported formats: PDF, DOCX (max 50MB)",
+        "selectState": "Select State / UT",
+        "selectMonth": "Select Month",
+        "scheme": "Scheme (optional)",
+        "schemePlaceholder": "e.g. PMGDISHA, DigiLocker",
+        "submit": "Upload & Process",
+        "uploading": "Uploading...",
+        "processing": "Processing...",
+        "success": "Report successfully uploaded and queued for indexing.",
+        "error": "Upload failed. Please try again.",
+        "required": "State and Month are required."
+    },
+    "analysis": {
+        "title": "AI Analysis",
+        "subtitle": "Ask questions about governance reports using AI-powered RAG",
+        "filters": "Filters",
+        "state": "State / UT",
+        "month": "Month",
+        "allStates": "All States",
+        "allMonths": "All Months",
+        "promptLabel": "Your Question",
+        "promptPlaceholder": "e.g. What digital infrastructure initiatives were implemented in Q1 2025?",
+        "submit": "Analyse",
+        "analysing": "Analysing...",
+        "answer": "Analysis Result",
+        "sources": "Sources",
+        "chunksRetrieved": "Chunks Retrieved",
+        "confidence": "Confidence",
+        "noResult": "No analysis result yet. Submit a question to begin.",
+        "notFound": "Information not found in selected reports."
+    },
+    "compare": {
+        "title": "Compare Reports",
+        "subtitle": "Compare governance reporting across two months for the same state",
+        "state": "State / UT",
+        "monthA": "Month A (Earlier)",
+        "monthB": "Month B (Later)",
+        "topic": "Topic Focus (optional)",
+        "topicPlaceholder": "e.g. digital infrastructure, scheme coverage",
+        "submit": "Compare",
+        "comparing": "Comparing...",
+        "summary": "Comparison Summary",
+        "newInitiatives": "New Initiatives",
+        "removedMentions": "Removed Mentions",
+        "quantitativeChanges": "Quantitative Changes",
+        "complianceChanges": "Compliance Status Changes",
+        "citations": "Source Citations",
+        "metric": "Metric",
+        "monthA_col": "Month A",
+        "monthB_col": "Month B",
+        "area": "Area",
+        "noChanges": "No changes detected",
+        "noResult": "Select a state and two months to compare."
+    },
+    "reports": {
+        "title": "Reports",
+        "subtitle": "Browse and manage all uploaded governance reports",
+        "search": "Search by state, month, or file name...",
+        "columns": {
+            "name": "Document Name",
+            "state": "State",
+            "month": "Month",
+            "uploadDate": "Upload Date",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "viewDetails": "View Details",
+        "delete": "Delete",
+        "confirmDelete": "Are you sure you want to delete this report?",
+        "noReports": "No reports found.",
+        "detail": {
+            "title": "Report Details",
+            "extractedText": "Section Breakdown",
+            "chunkCount": "Chunks",
+            "embeddingStatus": "Embedding Status",
+            "metadata": "Metadata"
+        }
+    },
+    "settings": {
+        "title": "Settings",
+        "appearance": "Appearance",
+        "theme": "Theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System",
+        "language": "Language",
+        "english": "English",
+        "hindi": "Hindi",
+        "api": "API Status",
+        "backendStatus": "Backend API",
+        "aiStatus": "Groq AI (LLaMA 3.1)",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "checking": "Checking..."
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "An error occurred. Please try again.",
+        "retry": "Retry",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "close": "Close",
+        "back": "Back",
+        "noData": "No data available"
+    }
+}

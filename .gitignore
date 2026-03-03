@@ -1,3 +1,60 @@
-.DS_Store
-node_modules
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+.vercel/
+.netlify/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# Environment
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+
+# ML artifacts
+*.bin
+*.pt
+*.pkl
+*.onnx
+__pycache__/
