@@ -108,4 +108,4 @@ Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQL
 *   **Open Source**: Built entirely on an open-source stack (Postgres, Python, Next.js).
     
 
-Developed by Ashneet Jha ([ashneetjha.netlify.app](https://www.google.com/search?q=https://ashneetjha.netlify.app&authuser=1)), Intern at IIT Ropar for National e-Governance Division (NeGD), MeitY.
+Developed by Ashneet Jha ([ashneetjha.netlify.app](https://ashneetjha.netlify.app)), Intern at IIT Ropar for National e-Governance Division (NeGD), MeitY.
