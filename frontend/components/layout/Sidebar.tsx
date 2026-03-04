@@ -44,19 +44,20 @@ export default function Sidebar() {
                 href={`/${locale}${item.href}`}
                 onClick={close}
                 className={clsx(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
+                    // Added ambient-glow right here! 👇
+                    "ambient-glow flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
                     active
-                        ? "text-[var(--sidebar-active-text)] bg-[var(--sidebar-active)]"
-                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]"
+                        ? "text-blue-700 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-900/30 shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10"
                 )}
                 aria-current={active ? "page" : undefined}
             >
                 <Icon className={clsx(
                     "w-4 h-4 flex-shrink-0 transition-colors duration-200",
-                    active ? "text-[var(--accent)]" : "group-hover:text-[var(--text-primary)]"
+                    active ? "text-blue-600 dark:text-blue-400" : "group-hover:text-gray-900 dark:group-hover:text-white"
                 )} />
                 <span className="truncate">{t(item.key as "dashboard" | "upload" | "analysis" | "compare" | "reports" | "settings")}</span>
-                {active && <div className="ml-auto w-1 h-4 rounded-full bg-[var(--accent)]" />}
+                {active && <div className="ml-auto w-1 h-4 rounded-full bg-blue-600 dark:bg-blue-400 shadow-sm" />}
             </Link>
         );
     };
@@ -75,24 +76,18 @@ export default function Sidebar() {
             {/* Sidebar */}
             <aside
                 className={clsx(
-                    "flex flex-col border-r h-[calc(100vh-3.5rem)] overflow-y-auto transition-transform duration-300 ease-out",
-                    // Desktop: always visible
-                    "lg:relative lg:translate-x-0 lg:w-56 lg:flex-shrink-0",
-                    // Mobile: sliding drawer
-                    "fixed top-14 left-0 z-50 w-64",
-                    isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+                    "flex flex-col border-r transition-transform duration-300 ease-out backdrop-blur-xl bg-white/60 dark:bg-gray-950/60 border-gray-200/50 dark:border-white/10",
+                    "fixed top-16 left-0 z-[50] w-64 h-[calc(100vh-4rem)] shadow-2xl",
+                    "lg:relative lg:top-0 lg:z-0 lg:h-screen lg:shadow-none lg:translate-x-0 lg:flex-shrink-0",
+                    isOpen ? "translate-x-0" : "-translate-x-full"
                 )}
-                style={{
-                    backgroundColor: "var(--sidebar-bg)",
-                    borderColor: "var(--sidebar-border)",
-                }}
             >
                 {/* Mobile close button */}
-                <div className="flex items-center justify-between p-3 lg:hidden border-b border-[var(--sidebar-border)]">
-                    <span className="text-sm font-medium text-[var(--text-primary)]">Menu</span>
+                <div className="flex items-center justify-between p-3 lg:hidden border-b border-gray-200/50 dark:border-white/10">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Menu</span>
                     <button
                         onClick={close}
-                        className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)] transition-colors"
+                        className="p-1 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10 transition-colors"
                         aria-label="Close menu"
                     >
                         <X className="w-4 h-4" />
@@ -100,23 +95,23 @@ export default function Sidebar() {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-3 space-y-0.5" aria-label="Main navigation">
-                    <div className="section-label px-3 pt-2 pb-3">Navigation</div>
+                <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Main navigation">
+                    <div className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-3 pt-4 pb-3">Navigation</div>
                     {navItems.map((item) => (
                         <NavLink key={item.key} item={item} />
                     ))}
                 </nav>
 
                 {/* Bottom */}
-                <div className="p-3 border-t border-[var(--sidebar-border)] space-y-0.5">
+                <div className="p-3 border-t border-gray-200/50 dark:border-white/10 space-y-1">
                     {bottomItems.map((item) => (
                         <NavLink key={item.key} item={item} />
                     ))}
-                    <div className="px-3 pt-3 pb-1">
-                        <p className="text-2xs text-[var(--text-muted)] leading-relaxed">
+                    <div className="px-3 pt-3 pb-2">
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed font-semibold">
                             NeGD Digital Governance Intelligence Portal
                         </p>
-                        <p className="text-2xs text-[var(--text-muted)]">v1.0 · IIT Ropar × NeGD</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">IIT Ropar × NeGD</p>
                     </div>
                 </div>
             </aside>

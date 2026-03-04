@@ -27,7 +27,10 @@ export default async function RootLayout({
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/favicon.ico" />
             </head>
-            <body className="min-h-screen" suppressHydrationWarning>
+            <body 
+                className="min-h-screen antialiased bg-gray-50 dark:bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100 via-gray-50 to-white dark:from-slate-900 dark:via-gray-950 dark:to-gray-950" 
+                suppressHydrationWarning
+            >
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"

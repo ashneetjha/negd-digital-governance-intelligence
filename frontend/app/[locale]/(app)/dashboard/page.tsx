@@ -51,20 +51,20 @@ function StatCard({
     value: string | number;
 }) {
     return (
-        <div className="card-hover p-4 md:p-5">
+        // Added ambient-glow right here! 👇
+        <div className="ambient-glow card-hover p-4 md:p-5 bg-white dark:bg-gray-900/50">
             <div className="flex items-start justify-between">
                 <div>
-                    <p className="label">{label}</p>
-                    <p className="text-xl md:text-2xl font-semibold text-[var(--text-primary)] mt-1">{value}</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mt-1 tracking-tight">{value}</p>
                 </div>
-                <div className="stat-icon-bg">
-                    <Icon className="w-4.5 h-4.5 text-[var(--accent)]" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 flex-shrink-0">
+                    <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
             </div>
         </div>
     );
 }
-
 const SKELETON_WIDTHS = ["64%", "78%", "56%", "82%", "69%", "74%"];
 
 export default function DashboardPage() {
@@ -162,30 +162,16 @@ export default function DashboardPage() {
         return (
             <div className="space-y-6">
                 <div>
-                    <div className="skeleton h-6 w-28 rounded mb-2" />
+                    <div className="skeleton h-8 w-48 rounded mb-2" />
                     <div className="skeleton h-4 w-72 rounded" />
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
                         <div key={i} className="card p-5 space-y-3">
                             <div className="skeleton h-3 w-20 rounded" />
-                            <div className="skeleton h-7 w-14 rounded" />
+                            <div className="skeleton h-8 w-16 rounded" />
                         </div>
                     ))}
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="card p-4 col-span-1 lg:col-span-2 space-y-3">
-                        <div className="skeleton h-4 w-32 rounded" />
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="skeleton h-3 rounded" style={{ width: SKELETON_WIDTHS[i % SKELETON_WIDTHS.length] }} />
-                        ))}
-                    </div>
-                    <div className="card p-4 space-y-3">
-                        <div className="skeleton h-4 w-32 rounded" />
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="skeleton h-3 rounded" style={{ width: SKELETON_WIDTHS[(i + 2) % SKELETON_WIDTHS.length] }} />
-                        ))}
-                    </div>
                 </div>
             </div>
         );
@@ -193,13 +179,13 @@ export default function DashboardPage() {
 
     if (error || !stats) {
         return (
-            <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-3 text-[var(--text-secondary)]">
+            <div className="card p-6 flex flex-col sm:flex-row sm:items-center gap-3 text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
                     <p className="text-sm">{error || "No data available."}</p>
                 </div>
                 <div className="sm:ml-auto flex items-center gap-2">
-                    <span className="text-xs text-[var(--text-muted)]">Retries: {attempt}</span>
+                    <span className="text-xs text-gray-500">Retries: {attempt}</span>
                     <button className="btn-secondary text-xs" onClick={() => void loadData(true)}>
                         Retry
                     </button>
@@ -209,10 +195,10 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <motion.div ref={headerRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-                <h1 className="page-title">{t("title")}</h1>
-                <p className="page-subtitle">Operational overview of state report submissions</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t("title")}</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Operational overview of state report submissions</p>
             </motion.div>
 
             <div ref={cardsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -223,33 +209,33 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div ref={tableRef} className="card col-span-1 lg:col-span-2">
-                    <div className="p-4 border-b border-[var(--bg-border)] flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-[var(--accent)]" />
-                        <span className="font-medium text-sm text-[var(--text-primary)]">{t("recentUploads")}</span>
+                <div ref={tableRef} className="card col-span-1 lg:col-span-2 bg-white dark:bg-gray-900/50">
+                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{t("recentUploads")}</span>
                     </div>
 
                     {(stats.recent_uploads?.length ?? 0) === 0 ? (
-                        <p className="text-sm text-[var(--text-muted)] p-4">{t("noReports")}</p>
+                        <p className="text-sm text-gray-500 p-4">{t("noReports")}</p>
                     ) : (
                         <>
                             <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-sm" role="table">
                                     <thead>
-                                        <tr className="border-b border-[var(--bg-border)]">
-                                            <th className="text-left px-4 py-2.5 label">State</th>
-                                            <th className="text-left px-4 py-2.5 label">Month</th>
-                                            <th className="text-left px-4 py-2.5 label">File</th>
-                                            <th className="text-left px-4 py-2.5 label">Status</th>
+                                        <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+                                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">State</th>
+                                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Month</th>
+                                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">File</th>
+                                            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {stats.recent_uploads.map((r) => (
-                                            <tr key={r.id} className="border-b border-[var(--bg-border)] last:border-0 hover:bg-[var(--bg-surface-2)] transition-colors">
-                                                <td className="px-4 py-2.5 text-[var(--text-primary)] font-medium">{r.state}</td>
-                                                <td className="px-4 py-2.5 text-[var(--text-secondary)]">{r.reporting_month}</td>
-                                                <td className="px-4 py-2.5 text-[var(--text-muted)] truncate max-w-[220px]">{r.file_name}</td>
-                                                <td className="px-4 py-2.5"><StatusBadge status={r.processed_status} /></td>
+                                            <tr key={r.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{r.state}</td>
+                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{r.reporting_month}</td>
+                                                <td className="px-4 py-3 text-gray-500 dark:text-gray-500 truncate max-w-[220px]">{r.file_name}</td>
+                                                <td className="px-4 py-3"><StatusBadge status={r.processed_status} /></td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -258,13 +244,13 @@ export default function DashboardPage() {
 
                             <div className="md:hidden p-3 space-y-2">
                                 {stats.recent_uploads.map((r) => (
-                                    <div key={r.id} className="rounded-lg border border-[var(--bg-border)] p-3 bg-[var(--bg-surface-2)]">
+                                    <div key={r.id} className="rounded-lg border border-gray-100 dark:border-gray-800 p-3 bg-gray-50 dark:bg-gray-800/30">
                                         <div className="flex items-center justify-between gap-2">
-                                            <p className="text-sm font-medium text-[var(--text-primary)]">{r.state}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{r.state}</p>
                                             <StatusBadge status={r.processed_status} />
                                         </div>
-                                        <p className="text-xs text-[var(--text-secondary)] mt-1">{r.reporting_month}</p>
-                                        <p className="text-xs text-[var(--text-muted)] mt-1 truncate">{r.file_name}</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{r.reporting_month}</p>
+                                        <p className="text-xs text-gray-500 mt-1 truncate">{r.file_name}</p>
                                     </div>
                                 ))}
                             </div>
@@ -272,48 +258,50 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                <div ref={pendingRef} className="card">
-                    <div className="p-4 border-b border-[var(--bg-border)] flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse-dot" />
-                        <span className="font-medium text-sm text-[var(--text-primary)]">{t("pendingStatesList")}</span>
-                        <span className="ml-auto text-xs text-[var(--text-muted)]">{stats.pending_states?.length ?? 0}</span>
+                <div className="space-y-6">
+                    <div ref={pendingRef} className="card bg-white dark:bg-gray-900/50">
+                        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse-dot" />
+                            <span className="font-semibold text-sm text-gray-900 dark:text-white">{t("pendingStatesList")}</span>
+                            <span className="ml-auto text-xs font-medium text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">{stats.pending_states?.length ?? 0}</span>
+                        </div>
+                        <div className="p-3 max-h-[300px] overflow-y-auto space-y-1">
+                            {(stats.pending_states?.length ?? 0) === 0 ? (
+                                <p className="text-sm text-gray-500 p-2 text-center">All states submitted ✓</p>
+                            ) : (
+                                stats.pending_states.map((state) => (
+                                    <div key={state} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400/80 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">{state}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
-                    <div className="p-3 max-h-64 overflow-y-auto space-y-1">
-                        {(stats.pending_states?.length ?? 0) === 0 ? (
-                            <p className="text-sm text-[var(--text-muted)] p-1">All states submitted ✓</p>
-                        ) : (
-                            stats.pending_states.map((state) => (
-                                <div key={state} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[var(--bg-surface-2)] transition-colors">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                    <span className="text-xs text-[var(--text-secondary)]">{state}</span>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-            </div>
 
-            <div ref={diagnosticsRef} className="card p-4">
-                <div className="flex items-center gap-2 mb-3">
-                    <Cpu className="w-4 h-4 text-[var(--accent)]" />
-                    <p className="text-sm font-medium text-[var(--text-primary)]">System Diagnostics</p>
-                    <span className={systemStatus?.overall_status === "healthy" ? "badge-indexed ml-auto" : "badge-failed ml-auto"}>
-                        {systemStatus?.overall_status ?? "unknown"}
-                    </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {diagnostics.map((item) => (
-                        <div key={item.label} className="rounded-lg border border-[var(--bg-border)] px-3 py-2 flex items-center justify-between">
-                            <span className="text-xs text-[var(--text-secondary)]">{item.label}</span>
-                            <span className={item.ok ? "text-green-600 text-xs font-medium" : "text-red-500 text-xs font-medium"}>
-                                {item.ok ? "Healthy" : "Unavailable"}
+                    <div ref={diagnosticsRef} className="card p-4 bg-white dark:bg-gray-900/50">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Cpu className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">System Diagnostics</p>
+                            <span className={systemStatus?.overall_status === "healthy" ? "badge-indexed ml-auto" : "badge-failed ml-auto"}>
+                                {systemStatus?.overall_status ?? "unknown"}
                             </span>
                         </div>
-                    ))}
+                        <div className="space-y-2">
+                            {diagnostics.map((item) => (
+                                <div key={item.label} className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2 flex items-center justify-between">
+                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{item.label}</span>
+                                    <span className={item.ok ? "text-green-600 dark:text-green-400 text-xs font-semibold" : "text-red-500 dark:text-red-400 text-xs font-semibold"}>
+                                        {item.ok ? "Healthy" : "Unavailable"}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-4 text-center font-mono">
+                            STRICT_AI_MODE: {systemStatus?.strict_ai_mode ? "ENABLED" : "DISABLED"}
+                        </p>
+                    </div>
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-3">
-                    Strict AI mode: {systemStatus?.strict_ai_mode ? "ON" : "OFF"}
-                </p>
             </div>
         </div>
     );

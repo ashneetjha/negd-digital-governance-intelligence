@@ -18,8 +18,8 @@
     --accent: #1d4ed8;
     --accent-hover: #1e40af;
     --accent-subtle: #dbeafe;
-    --header-bg: #0f172a;
-    --header-text: #f8fafc;
+    --header-bg: transparent; /* Changed to let glassmorphism shine */
+    --header-text: #151c2c;
     --sidebar-bg: #ffffff;
     --sidebar-border: #e4e8ef;
     --sidebar-active: #eff6ff;
@@ -39,7 +39,7 @@
     --accent: #3b82f6;
     --accent-hover: #60a5fa;
     --accent-subtle: #1e3a5f;
-    --header-bg: #060b17;
+    --header-bg: transparent; /* Changed to let glassmorphism shine */
     --header-text: #f1f5f9;
     --sidebar-bg: #0f1729;
     --sidebar-border: #1e2840;
@@ -54,7 +54,7 @@
   }
 
   body {
-    background-color: var(--bg-page);
+    /* Removed hardcoded background-color so layout.tsx gradient works */
     color: var(--text-primary);
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -84,11 +84,11 @@
 /* ── Component Utilities ─────────────────────────────────────────────────── */
 @layer components {
   .card {
-    @apply bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-xl shadow-card;
+    @apply bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-xl shadow-sm;
   }
 
   .card-hover {
-    @apply card transition-shadow hover:shadow-card-md hover:-translate-y-px;
+    @apply card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
 
   .btn-primary {
@@ -105,7 +105,7 @@
 
   .input-field {
     @apply bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-lg px-3 py-2 
-           text-[var(--text-primary)] text-sm w-full
+           text-[var(--text-primary)] text-sm w-full transition-shadow
            focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent
            placeholder:text-[var(--text-muted)];
   }
@@ -115,39 +115,52 @@
   }
 
   .badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border border-transparent;
   }
 
   .badge-indexed {
-    @apply badge bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400;
+    @apply badge bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30;
   }
 
   .badge-processing {
-    @apply badge bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400;
+    @apply badge bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30;
   }
 
   .badge-pending {
-    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400;
+    @apply badge bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30;
   }
 
   .badge-failed {
-    @apply badge bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400;
+    @apply badge bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30;
   }
 
   .page-title {
-    @apply text-xl font-semibold text-[var(--text-primary)] tracking-tight;
+    @apply text-2xl font-semibold text-[var(--text-primary)] tracking-tight;
   }
 
   .page-subtitle {
-    @apply text-sm text-[var(--text-muted)] mt-0.5;
-  }
-
-  .section-label {
-    @apply text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest;
+    @apply text-sm text-[var(--text-muted)] mt-1;
   }
 
   .divider {
-    @apply border-t border-[var(--bg-border)] my-4;
+    @apply border-t border-[var(--bg-border)] my-6;
+  }
+  /* Universal Ambient Glow Utility */
+  .ambient-glow {
+    @apply relative z-10 transition-all duration-300;
+  }
+  
+  .ambient-glow::after {
+    content: '';
+    @apply absolute -inset-2 bg-white/0 rounded-full blur-xl z-[-1] transition-all duration-500 pointer-events-none;
+  }
+  
+  .dark .ambient-glow:hover::after {
+    @apply bg-white/20 blur-2xl;
+  }
+  
+  .dark .ambient-glow:hover {
+    @apply drop-shadow-[0_0_2px_rgba(255,255,255,0.5)];
   }
 
   /* Skeleton loading */
@@ -163,28 +176,9 @@
     animation: shimmer 1.8s ease-in-out infinite;
   }
 
-  .skeleton-text {
-    @apply skeleton h-3 rounded;
-  }
-
-  .skeleton-title {
-    @apply skeleton h-5 w-32 rounded;
-  }
-
-  .skeleton-card {
-    @apply card p-5 space-y-3;
-  }
-
-  /* Progress bar */
-  .progress-bar {
-    @apply h-1.5 rounded-full overflow-hidden;
-    background: var(--bg-surface-2);
-  }
-
-  .progress-bar-fill {
-    @apply h-full rounded-full transition-all duration-700 ease-out;
-    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-  }
+  .skeleton-text { @apply skeleton h-3 rounded; }
+  .skeleton-title { @apply skeleton h-6 w-48 rounded; }
+  .skeleton-card { @apply card p-6 space-y-4; }
 
   /* Gradient text */
   .gradient-text {
@@ -196,41 +190,29 @@
 
   /* Glassmorphism card */
   .glass-card {
-    @apply rounded-xl border;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    border-color: rgba(255, 255, 255, 0.1);
+    @apply rounded-xl border backdrop-blur-xl shadow-sm;
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
   }
 
   .dark .glass-card {
-    background: rgba(15, 23, 42, 0.6);
-    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(15, 23, 42, 0.4);
+    border-color: rgba(255, 255, 255, 0.05);
   }
 
-  /* Stat card gradient icon bg */
-  .stat-icon-bg {
-    @apply w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0;
-    background: linear-gradient(135deg, var(--accent-subtle), transparent);
-  }
-
-  /* Mobile overlay */
-  .sidebar-overlay {
-    @apply fixed inset-0 bg-black/40 z-40 backdrop-blur-sm;
-  }
-
-  /* Custom scrollbar */
+  /* Custom scrollbar - MAANG style */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-[var(--bg-border)] rounded-full;
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full border-2 border-transparent bg-clip-padding;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-[var(--text-muted)];
+    @apply bg-gray-400 dark:bg-gray-600;
   }
 }
 
@@ -239,32 +221,13 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.85); }
 }
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-4px); }
 }
-
-.animate-pulse-dot {
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 6s ease infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }

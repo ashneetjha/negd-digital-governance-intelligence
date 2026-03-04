@@ -73,14 +73,15 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="max-w-2xl space-y-6 animate-fade-in">
+        // Added mx-auto here to perfectly center the container!
+        <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
             <div>
-                <h1 className="page-title">{t("title")}</h1>
-                <p className="page-subtitle">{t("subtitle")}</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t("title")}</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("subtitle")}</p>
             </div>
 
             <motion.form
-                className="card p-6 space-y-5"
+                className="card p-6 space-y-5 bg-white dark:bg-gray-900/50 border-gray-100 dark:border-gray-800"
                 onSubmit={handleSubmit}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -88,15 +89,15 @@ export default function UploadPage() {
             >
                 {/* File Dropzone */}
                 <div>
-                    <label className="label">Document</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block">Document</label>
                     <div
                         className={clsx(
-                            "relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
+                            "relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors duration-200",
                             dragOver
-                                ? "border-[var(--accent)] bg-[var(--accent-subtle)]"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                                 : file
                                     ? "border-green-400 bg-green-50 dark:bg-green-900/10"
-                                    : "border-[var(--bg-border)] hover:border-[var(--accent)] hover:bg-[var(--accent-subtle)]"
+                                    : "border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
                         )}
                         onDrop={handleDrop}
                         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -112,15 +113,15 @@ export default function UploadPage() {
                         />
                         {file ? (
                             <div className="flex items-center justify-center gap-3">
-                                <File className="w-6 h-6 text-green-600" />
+                                <File className="w-6 h-6 text-green-500 dark:text-green-400" />
                                 <div className="text-left">
-                                    <p className="text-sm font-medium text-[var(--text-primary)]">{file.name}</p>
-                                    <p className="text-xs text-[var(--text-muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{file.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); setFile(null); }}
-                                    className="ml-4 text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                                    className="ml-4 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                                     aria-label="Remove file"
                                 >
                                     <X className="w-4 h-4" />
@@ -128,21 +129,21 @@ export default function UploadPage() {
                             </div>
                         ) : (
                             <div className="space-y-2">
-                                <UploadIcon className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-                                <p className="text-sm text-[var(--text-secondary)]">{t("dragDrop")}</p>
-                                <p className="text-xs text-[var(--text-muted)]">{t("fileTypes")}</p>
+                                <UploadIcon className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto" />
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{t("dragDrop")}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500">{t("fileTypes")}</p>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* State & Month */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="label" htmlFor="state-select">{t("selectState")}</label>
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block" htmlFor="state-select">{t("selectState")}</label>
                         <select
                             id="state-select"
-                            className="input-field"
+                            className="input-field bg-white dark:bg-gray-950/50 border-gray-200 dark:border-gray-800"
                             value={state}
                             onChange={(e) => setState(e.target.value)}
                             required
@@ -167,11 +168,11 @@ export default function UploadPage() {
 
                 {/* Scheme (optional) */}
                 <div>
-                    <label className="label" htmlFor="scheme-input">{t("scheme")}</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 block" htmlFor="scheme-input">{t("scheme")}</label>
                     <input
                         id="scheme-input"
                         type="text"
-                        className="input-field"
+                        className="input-field bg-white dark:bg-gray-950/50 border-gray-200 dark:border-gray-800"
                         placeholder={t("schemePlaceholder")}
                         value={scheme}
                         onChange={(e) => setScheme(e.target.value)}
@@ -179,10 +180,11 @@ export default function UploadPage() {
                 </div>
 
                 {/* Submit */}
-                <div className="flex items-center gap-4 pt-1">
+                <div className="flex items-center gap-4 pt-2">
+                    {/* 👇 ambient-glow makes the upload button pop! */}
                     <button
                         type="submit"
-                        className="btn-primary flex items-center gap-2"
+                        className="ambient-glow btn-primary flex items-center gap-2"
                         disabled={status === "uploading"}
                     >
                         {status === "uploading" ? (
@@ -194,7 +196,7 @@ export default function UploadPage() {
 
                     {/* Status message */}
                     {message && (
-                        <div className={clsx("flex items-center gap-2 text-sm", status === "success" ? "text-green-600" : "text-red-500")}>
+                        <div className={clsx("flex items-center gap-2 text-sm font-medium", status === "success" ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400")}>
                             {status === "success" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
                             {message}
                         </div>
@@ -205,13 +207,13 @@ export default function UploadPage() {
             {/* Report ID after success */}
             {reportId && (
                 <motion.div
-                    className="card p-4 bg-[var(--accent-subtle)] border-[var(--accent)]"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    className="card p-5 bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
                 >
-                    <p className="text-xs text-[var(--text-secondary)]">Report ID (for tracking)</p>
-                    <p className="text-sm font-mono text-[var(--text-primary)] mt-1 break-all">{reportId}</p>
-                    <p className="text-xs text-[var(--text-muted)] mt-2">
+                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Report ID (for tracking)</p>
+                    <p className="text-sm font-mono text-gray-900 dark:text-white mt-1.5 break-all">{reportId}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
                         The report is being processed in the background. Check the Reports page for indexing status.
                     </p>
                 </motion.div>

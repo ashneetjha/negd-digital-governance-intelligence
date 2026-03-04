@@ -14,7 +14,7 @@ interface MonthYearPickerProps {
     id?: string;
 }
 
-const MIN_YEAR = 2015;
+const MIN_YEAR = 1947;
 
 function buildMonthLabels(locale: string) {
     const shortFmt = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", { month: "short" });

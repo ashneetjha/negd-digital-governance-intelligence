@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NeGD Digital Governance Intelligence Portal 🏛️🤖
 
-## Getting Started
+### AI-Powered Governance Intelligence System
+**Collaboration:** National e-Governance Division (NeGD), MeitY, Government of India & IIT Ropar  
+**Intern:** Ashneet Jha |
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🎯 Project Objective
+[cite_start]This system is designed to automate the analysis of monthly state-level governance reports[cite: 5]. By leveraging Retrieval-Augmented Generation (RAG), the portal converts semi-structured reports into a searchable intelligence layer, enabling:
+* [cite_start]**Automated Ingestion:** Processing monthly state reports (DOCX/PDF)[cite: 6].
+* [cite_start]**Contextual Querying:** Prompt-driven extraction of specific policy or compliance insights[cite: 61, 71].
+* [cite_start]**Comparative Intelligence:** Month-to-month structured comparison to track state-wise progress and adoption gaps[cite: 67, 114].
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏗️ System Architecture
+[cite_start]The project follows a modern RAG (Retrieval-Augmented Generation) workflow to ensure all AI responses are grounded in official government documents[cite: 73, 101].
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+### Technical Stack
+* **Frontend:** Next.js 16 + Tailwind CSS
+* **Backend:** FastAPI (Python)
+* [cite_start]**Database:** Supabase (PostgreSQL) with `pgvector` for semantic search [cite: 8, 28]
+* [cite_start]**Embeddings:** `all-MiniLM-L6-v2` (Sentence-Transformers) 
+* [cite_start]**LLM:** Groq LLaMA 3.1 8B / Google Gemini (Deterministic configuration) [cite: 11, 28]
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ✅ Current Development Status (~90% Complete)
 
-## Deploy on Vercel
+### Phase 1: Infrastructure & Data Layer (Completed)
+* [cite_start]Supabase schema design with `report_chunks` and `pgvector`[cite: 8].
+* [cite_start]Background ingestion pipeline with structured logging[cite: 8].
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Phase 2: RAG Intelligence Layer (Completed)
+* [cite_start]Vector similarity retrieval using RPC functions[cite: 8, 11].
+* [cite_start]Citation-backed responses to ensure traceability to source documents[cite: 11, 101].
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Phase 3: Comparative Engine (Completed)
+* [cite_start]Cross-month retrieval and initiative detection[cite: 14].
+* [cite_start]Structured JSON output for quantitative change extraction[cite: 14].
+
+### Phase 4: Production Hardening (In Progress)
+* [cite_start][x] CORS configuration & Error handling[cite: 17].
+* [cite_start][ ] Rate limiting & Authentication layer[cite: 19, 20].
+* [cite_start][ ] Final Deployment to Render/Netlify[cite: 32, 35].
+
+---
+
+## 🚀 Key Capabilities
+* [cite_start]**Flexible Extraction:** Instead of hardcoded fields, the system uses natural language prompts to find adoption levels for schemes like DigiLocker[cite: 72, 75].
+* [cite_start]**Trend Identification:** Automatically detects improvements or regressions in state performance over time[cite: 104].
+* [cite_start]**Case Study Generation:** Derives qualitative insights directly from report text to highlight best practices[cite: 78, 118].
+
+---
+
+## 🛠️ Local Setup
+1. **Clone the Repo:** `git clone https://github.com/your-repo/negd-intelligence.git`
+2. **Backend:** Install requirements via `pip install -r requirements.txt` and set up your `.env` with Supabase and Groq/Gemini keys.
+3. **Frontend:** Run `npm install` and `npm run dev`.
