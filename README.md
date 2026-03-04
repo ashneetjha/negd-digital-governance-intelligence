@@ -1,249 +1,111 @@
-# NeGD Digital Governance Intelligence Portal
+NeGD Digital Governance Intelligence Portal
+===========================================
 
 AI-powered Governance Intelligence System for the **National e-Governance Division (NeGD)**, MeitY, Government of India.
 
-Upload state governance reports (DOCX/PDF), generate semantic embeddings, and perform RAG-based analysis with citation-backed insights.
+Developed by **IIT Ropar** in collaboration with NeGD, this system automates the ingestion of monthly state-level reports to provide prompt-driven extraction, comparative analysis, and high-level governance insights.
 
----
+🏛️ Project Vision
+------------------
 
-## Architecture
+The portal eliminates the manual overhead of analyzing text-heavy monthly reports. It provides a prompt-driven intelligence layer using **Retrieval-Augmented Generation (RAG)**, enabling officials to derive qualitative insights and case studies grounded strictly in the provided report content.
 
-```
-Frontend (Next.js 16 + Tailwind)
-  → FastAPI Backend
-    → Supabase (Postgres + pgvector)
-    → SentenceTransformers (all-MiniLM-L6-v2)
-    → Groq LLaMA 3.1 8B Instant (LLM)
-```
+🏗️ Architecture
+----------------
 
-## Features
+Plaintext
 
-- **Document Ingestion** — Upload DOCX/PDF reports with state & month metadata
-- **Semantic Chunking** — Smart section extraction, overlap-based chunking
-- **Vector Embeddings** — 384-dim SentenceTransformer embeddings in pgvector
-- **RAG Analysis** — Multi-stage retrieval, reranking, context management
-- **Month-to-Month Comparison** — Structured JSON diff with citations
-- **Confidence Scoring** — Faithfulness validation, hallucination risk
-- **System Diagnostics** — `/api/system/status` for Supabase, embeddings, Groq, strict-mode checks
-- **Bilingual UI** — English + Hindi (next-intl), dark/light themes
-- **Mobile Responsive** — Collapsible sidebar, adaptive layouts
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Frontend (Next.js 14 + Tailwind) [cite: 347, 349]    → FastAPI Backend (Secure Inference Layer) [cite: 367, 371]      → Supabase (Postgres + pgvector)       → SentenceTransformers (all-MiniLM-L6-v2)       → Groq LLaMA 3.1 8B Instant (LLM)   `
 
-## Tech Stack
+✨ Premium Features
+------------------
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16, React 19, Tailwind CSS 3, Framer Motion |
-| Backend | FastAPI, Pydantic Settings, structlog |
-| Database | Supabase (Postgres + pgvector) |
-| Embeddings | SentenceTransformers (all-MiniLM-L6-v2) |
-| LLM | Groq (LLaMA 3.1 8B Instant) |
-| Infra | Render (backend), Vercel/Netlify (frontend) |
+*   **Semantic Document Ingestion**: Intelligent extraction and chunking of DOCX/PDF reports.
+    
+*   **Vector-Based Intelligence**: 384-dim semantic embeddings stored in pgvector for high-speed contextual retrieval.
+    
+*   **Comparative Intelligence**: Structured JSON comparisons detecting month-to-month initiatives, improvements, and compliance gaps.
+    
+*   **Hallucination Control**: Strict RAG grounding with deterministic generation and automated citation enforcement.
+    
+*   **GovTech UI**: Premium glassmorphic interface with bilingual support (English/Hindi) and mobile-first responsive design.
+    
+*   **Diagnostics Dashboard**: Real-time system health checks for database connectivity and AI model readiness.
+    
 
----
+🛠️ Tech Stack
+--------------
 
-## Quick Start (Local Development)
+**LayerTechnologyFrontend**
 
-### Prerequisites
-- Python 3.11+
-- Node.js 20+
-- Supabase project with pgvector enabled
+Next.js 14 (App Router) , TypeScript , Tailwind CSS , Framer Motion , next-intl
 
-### 1. Clone & Setup Environment
+**Backend**
 
-```bash
-git clone https://github.com/ashneetjha/negd-digital-governance-intelligence.git
-cd negd-digital-governance-intelligence
-```
+FastAPI , Pydantic , Structlog , Docker
 
-### 2. Backend Setup
+**Database**
 
-```bash
-cd backend
-python -m venv .venv
-.venv/Scripts/activate   # Windows
-# source .venv/bin/activate  # macOS/Linux
+Supabase (PostgreSQL) + pgvector extension
 
-pip install -r requirements.txt
-```
+**Embeddings**
 
-Create `.env` in the project root (see `infra/.env.example`):
+local SentenceTransformers (all-MiniLM-L6-v2)
 
-```env
-APP_ENV=development
-DEBUG=true
-ALLOWED_ORIGINS=["http://localhost:3000"]
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-supabase-key
-LLM_PROVIDER=groq
-GROQ_API_KEY=your-groq-api-key
-GROQ_MODEL=llama-3.1-8b-instant
-STRICT_REAL_AI=true
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-EMBEDDING_DIMENSION=384
-RAG_TOP_K=8
-CHUNK_SIZE=600
-CHUNK_OVERLAP=100
-MAX_UPLOAD_SIZE_MB=50
-UPLOAD_DIR=/tmp/negd_uploads
-```
+**LLM**Groq (LLaMA 3.1 8B Instant)**Infra**
 
-Start backend:
+Render (Backend) , Netlify/Vercel (Frontend)
 
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+🚀 Quick Start (Local Development)
+----------------------------------
 
-API docs at: http://localhost:8000/api/docs
+### 1\. Backend Setup
 
-Run deployment preflight:
+Bash
 
-```bash
-cd backend
-..\.venv\Scripts\python.exe scripts\preflight.py
-```
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   cd backend  python -m venv .venv  # Activate: .venv\Scripts\activate (Win) or source .venv/bin/activate (Unix)  pip install -r requirements.txt   `
 
-### 3. Frontend Setup
+**Environment Variables (.env):**Set your SUPABASE\_URL, SUPABASE\_KEY, and GROQ\_API\_KEY. Set STRICT\_REAL\_AI=true to enforce grounded RAG responses.
 
-```bash
-cd frontend
-npm install
-```
+**Run Preflight & Start:**
 
-Create `frontend/.env.local`:
+Bash
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   python scripts/preflight.py  # Verify environment health [cite: 35, 149]  uvicorn app.main:app --reload [cite: 168]   `
 
-Start frontend:
+### 2\. Frontend Setup
 
-```bash
-npm run dev
-```
+Bash
 
-Open http://localhost:3000
+Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   cd frontend  npm install [cite: 161]  npm run dev [cite: 164]   `
 
----
-
-## Deployment
+🌐 Production Deployment
+------------------------
 
 ### Backend — Render
 
-1. Push code to GitHub
-2. Connect repo on [Render](https://render.com)
-3. Use `infra/render.yaml` as the blueprint
-4. Set environment variables in Render dashboard:
-   - `SUPABASE_URL`
-   - `SUPABASE_KEY`
-   - `GROQ_API_KEY`
-5. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+### Frontend — Netlify
 
-### Frontend — Vercel
+📁 Project Structure
+--------------------
 
-1. Import repo on [Vercel](https://vercel.com)
-2. Set root directory to `frontend`
-3. Set environment variable:
-   - `NEXT_PUBLIC_API_URL` = `https://your-backend.onrender.com`
-4. Deploy
+*   backend/: FastAPI application, ingestion pipelines, and database migrations.
+    
+*   frontend/: Next.js portal with internationalization (i18n) and GovTech components.
+    
+*   ml/: Centralized prompt governance (system\_prompt.txt) and RAG pipelines.
+    
+*   infra/: Production deployment configurations for Docker, Render, and Netlify.
+    
 
-Recommended production envs:
-- `NEXT_PUBLIC_API_URL=https://<your-render-service>.onrender.com`
+⚖️ Governance & Compliance
+--------------------------
 
-### Frontend — Netlify (Alternative)
+*   **Zero Hallucination Policy**: All AI responses must be traceable to a source chunk.
+    
+*   **Audit Ready**: Every extraction includes state, month, and section citations.
+    
+*   **Open Source**: Built entirely on an open-source stack (Postgres, Python, Next.js).
+    
 
-1. Import repo on [Netlify](https://netlify.com)
-2. Build settings are in `infra/netlify.toml`
-3. Set `NEXT_PUBLIC_API_URL` in environment variables
-4. Install the `@netlify/plugin-nextjs` plugin
-
-### Supabase Setup
-
-Ensure the following are configured:
-- `pgvector` extension enabled
-- `reports` and `report_chunks` tables created
-- `match_chunks` RPC function deployed
-- `match_chunks_for_comparison` RPC function deployed
-- Row Level Security configured
-
----
-
-## Project Structure
-
-```
-negd-digital-governance-intelligence/
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # FastAPI entry point
-│   │   ├── config.py             # Pydantic settings
-│   │   ├── routes/               # API endpoints
-│   │   │   ├── ingest.py         # Document upload
-│   │   │   ├── analysis.py       # RAG analysis
-│   │   │   ├── compare.py        # Month comparison
-│   │   │   └── reports.py        # Report management
-│   │   ├── services/             # Business logic
-│   │   │   ├── rag_service.py    # RAG pipeline
-│   │   │   ├── embedding_service.py
-│   │   │   ├── chunking_service.py
-│   │   │   ├── parsing_service.py
-│   │   │   └── comparison_service.py
-│   │   ├── db/                   # Supabase client
-│   │   └── utils/                # Logger, helpers
-│   └── requirements.txt
-├── frontend/
-│   ├── app/
-│   │   └── [locale]/(app)/       # i18n-routed pages
-│   │       ├── dashboard/
-│   │       ├── upload/
-│   │       ├── analysis/
-│   │       ├── compare/
-│   │       ├── reports/
-│   │       └── settings/
-│   ├── components/layout/        # Header, Sidebar
-│   ├── lib/utils.ts              # API client, constants
-│   ├── messages/                 # en.json, hi.json
-│   └── package.json
-├── infra/
-│   ├── render.yaml               # Render deployment config
-│   ├── netlify.toml              # Netlify deployment config
-│   ├── Dockerfile.backend        # Docker build
-│   └── .env.example              # Environment template
-├── ml/
-│   ├── rag_pipeline.py
-│   ├── embedding_pipeline.py
-│   └── compare_pipeline.py
-└── .gitignore
-```
-
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SUPABASE_URL` | ✅ | Supabase project URL |
-| `SUPABASE_KEY` | ✅ | Supabase service role key |
-| `GROQ_API_KEY` | ✅ | Groq API key for LLM |
-| `GROQ_MODEL` | ❌ | Default: `llama-3.1-8b-instant` |
-| `STRICT_REAL_AI` | ❌ | Default: `true`; disables fallback AI paths |
-| `EMBEDDING_MODEL` | ❌ | Default: `all-MiniLM-L6-v2` |
-| `NEXT_PUBLIC_API_URL` | ✅ | Backend URL (frontend) |
-| `ALLOWED_ORIGINS` | ❌ | CORS origins JSON array |
-
----
-
-## Release Checklist
-
-Before pushing production deploys:
-
-1. Supabase migrations applied (`backend/app/db/migrations.sql`).
-2. `python backend/scripts/preflight.py` passes.
-3. `/health` and `/api/system/status` return healthy signals.
-4. Upload → index → dashboard flow verified.
-5. Analysis and Compare routes return citation-backed responses.
-6. Mobile checks completed for 320x568, 390x844, 768x1024, 1366x768.
-
----
-
-## License
-
-MIT License · Developed by IIT Ropar for NeGD, MeitY
+Developed by Ashneet Jha ([ashneetjha.netlify.app](https://www.google.com/search?q=https://ashneetjha.netlify.app&authuser=1)), Intern at IIT Ropar for National e-Governance Division (NeGD), MeitY.
