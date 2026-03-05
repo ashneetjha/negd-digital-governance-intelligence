@@ -6,6 +6,7 @@ FastAPI Backend — Application Entry Point
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import json
 
 from app.config import settings
 from app.routes import ingest, analysis, compare, reports, system
@@ -29,10 +30,23 @@ app = FastAPI(
 )
 
 # ──────────────────────────────────────────────────────────────
-# CORS Configuration
+# CORS Configuration - Hardened for Production
 # ──────────────────────────────────────────────────────────────
 
-allowed_origins = settings.ALLOWED_ORIGINS or ["http://localhost:3000"]
+# Ensure allowed_origins is always a list, even if passed as a string from Render
+raw_origins = settings.ALLOWED_ORIGINS
+if isinstance(raw_origins, str):
+    try:
+        allowed_origins = json.loads(raw_origins)
+    except json.JSONDecodeError:
+        allowed_origins = [raw_origins]
+else:
+    allowed_origins = raw_origins or ["http://localhost:3000"]
+
+# Add your production Netlify URL explicitly to ensure access
+production_url = "https://negd-digital-governance-intelligence.netlify.app"
+if production_url not in allowed_origins:
+    allowed_origins.append(production_url)
 
 app.add_middleware(
     CORSMiddleware,
