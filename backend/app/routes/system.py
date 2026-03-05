@@ -1,7 +1,8 @@
 """
 System diagnostics route.
 
-GET /api/system/status
+GET /api/ping          — ultra-lightweight keep-alive (no DB / model calls)
+GET /api/system/status — full diagnostic probe
 """
 
 import time
@@ -12,11 +13,26 @@ from fastapi import APIRouter
 
 from app.config import settings
 from app.db.database import get_supabase
-from app.services.embedding_service import _load_model
+from app.services.embedding_service import get_embedding_status
 from app.utils.logger import get_logger
 
 router = APIRouter()
 logger = get_logger(__name__)
+
+
+# ──────────────────────────────────────────────────────────────
+# Lightweight ping — designed for UptimeRobot / cron-job.org
+# and for the frontend BackendWakeup component.
+# No database or AI model calls; always responds in < 5 ms.
+# ──────────────────────────────────────────────────────────────
+
+@router.get("/ping", tags=["System"])
+async def ping():
+    return {
+        "pong": True,
+        "ts": time.time(),
+        "service": "negd-digital-governance-intelligence-api",
+    }
 
 
 def _empty_embedding_vector() -> list[float]:
@@ -76,14 +92,14 @@ async def get_system_status() -> dict[str, Any]:
     except Exception as exc:
         payload["supabase"]["error"] = str(exc)
 
-    # Embedding model probe
-    try:
-        model = _load_model()
-        payload["embedding"]["loaded"] = model is not None
-        if model is None and settings.STRICT_REAL_AI:
-            payload["embedding"]["error"] = "Embedding model missing in strict mode."
-    except Exception as exc:
-        payload["embedding"]["error"] = str(exc)
+    # Embedding model probe — non-blocking; reports current load state
+    emb_status = get_embedding_status()
+    payload["embedding"]["loaded"] = emb_status["loaded"]
+    payload["embedding"]["boot_status"] = emb_status["status"]
+    if emb_status["error"]:
+        payload["embedding"]["error"] = emb_status["error"]
+    elif emb_status["status"] == "loading":
+        payload["embedding"]["error"] = "Model is warming up — retry in a few seconds."
 
     # Groq probe
     if payload["groq"]["configured"]:

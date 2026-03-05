@@ -3,13 +3,16 @@ NeGD Digital Governance Intelligence Portal
 FastAPI Backend — Application Entry Point
 """
 
+import json
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import json
 
 from app.config import settings
 from app.routes import ingest, analysis, compare, reports, system
+from app.services.embedding_service import warmup_embedding_model
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -33,20 +36,62 @@ app = FastAPI(
 # CORS Configuration - Hardened for Production
 # ──────────────────────────────────────────────────────────────
 
-# Ensure allowed_origins is always a list, even if passed as a string from Render
-raw_origins = settings.ALLOWED_ORIGINS
-if isinstance(raw_origins, str):
-    try:
-        allowed_origins = json.loads(raw_origins)
-    except json.JSONDecodeError:
-        allowed_origins = [raw_origins]
-else:
-    allowed_origins = raw_origins or ["http://localhost:3000"]
+# Render (and other PaaS dashboards) may deliver ALLOWED_ORIGINS as:
+#   • A proper JSON array string:  '["https://a.com","https://b.com"]'
+#   • A bare single URL:           'https://a.com'
+#   • A comma-separated list:      'https://a.com, https://b.com'
+#   • An empty or whitespace-only string (mis-saved dashboard value)
+# We normalise all these cases into a clean Python list.
 
-# Add your production Netlify URL explicitly to ensure access
-production_url = "https://negd-digital-governance-intelligence.netlify.app"
-if production_url not in allowed_origins:
-    allowed_origins.append(production_url)
+def _parse_origins(raw) -> list[str]:
+    if isinstance(raw, list):
+        origins = raw
+    elif isinstance(raw, str):
+        stripped = raw.strip()
+        if not stripped:
+            origins = []
+        elif stripped.startswith("["):
+            try:
+                origins = json.loads(stripped)
+            except json.JSONDecodeError:
+                # Malformed JSON — treat whole thing as a single origin
+                origins = [stripped]
+        elif "," in stripped:
+            # Comma-separated list (common in PaaS dashboard env vars)
+            origins = [o.strip() for o in stripped.split(",")]
+        else:
+            origins = [stripped]
+    else:
+        origins = []
+
+    # Remove blanks and duplicates while preserving order
+    seen: set[str] = set()
+    cleaned: list[str] = []
+    for o in origins:
+        o = o.strip().rstrip("/")
+        if o and o not in seen:
+            seen.add(o)
+            cleaned.append(o)
+
+    return cleaned or ["http://localhost:3000"]
+
+
+allowed_origins = _parse_origins(settings.ALLOWED_ORIGINS)
+
+# Always include the canonical production URL
+_PRODUCTION_URL = "https://negd-digital-governance-intelligence.netlify.app"
+if _PRODUCTION_URL not in allowed_origins:
+    allowed_origins.append(_PRODUCTION_URL)
+
+# ── Force production settings when running on Render ─────────────────────────
+# Render injects RENDER=true automatically; use it as a reliable gate.
+if os.environ.get("RENDER") == "true" and settings.APP_ENV != "production":
+    logger.warning(
+        "APP_ENV is not 'production' on Render — overriding to 'production'",
+        detected_env=settings.APP_ENV,
+    )
+    os.environ["APP_ENV"] = "production"
+    settings.APP_ENV = "production"   # type: ignore[misc]
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,7 +112,12 @@ async def startup_event():
         environment=settings.APP_ENV,
         debug=settings.DEBUG,
         version=APP_VERSION,
+        allowed_origins=allowed_origins,
     )
+    # Pre-warm the embedding model in the background so it is ready
+    # before the first real request arrives (avoids cold-start timeouts).
+    warmup_embedding_model()
+    logger.info("Embedding model warmup triggered (background thread)")
 
 
 @app.on_event("shutdown")

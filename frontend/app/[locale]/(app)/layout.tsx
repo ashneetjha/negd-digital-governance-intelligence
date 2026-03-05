@@ -1,10 +1,15 @@
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
+import BackendWakeup from "@/components/BackendWakeup";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
         <SidebarProvider>
+            {/* Keep-alive ping warms up the Render free-tier container
+                as soon as the app shell mounts, before the user clicks anything. */}
+            <BackendWakeup />
+
             {/* Standard Dashboard Layout: Full-height Sidebar Left, Header + Content Right */}
             <div className="flex h-screen overflow-hidden bg-transparent">
                 

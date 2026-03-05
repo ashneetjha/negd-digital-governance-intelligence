@@ -46,5 +46,10 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
-# Using sh -c allows Docker to read Render's dynamic $PORT variable
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2"]
+# MEMORY CONSTRAINT: Render free tier has 512 MB RAM.
+# The SentenceTransformer model (~90 MB) + a PDF being parsed can easily
+# push 400+ MB.  A second worker would double that and cause OOM kills.
+# --workers 1  keeps peak RSS under 450 MB during simultaneous ingestion.
+# --timeout 120 allows the model to finish loading on a cold CPU start
+#               before Gunicorn considers the worker hung and kills it.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout 120"]
