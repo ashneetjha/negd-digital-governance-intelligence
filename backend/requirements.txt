@@ -81,7 +81,9 @@ sympy==1.14.0
 tenacity==8.3.0
 threadpoolctl==3.6.0
 tokenizers==0.22.2
-torch==2.2.2
+# We use the CPU-only wheel to save ~1.5GB of space and avoid OOM
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.2+cpu
 tqdm==4.67.3
 transformers==4.57.6
 typer==0.24.1
