@@ -16,7 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# CRITICAL FIX: Install CPU-only wheels to prevent timeout and OOM
+RUN pip install --no-cache-dir --prefix=/install \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r requirements.txt
 
 # ── Runner stage ──────────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runner
