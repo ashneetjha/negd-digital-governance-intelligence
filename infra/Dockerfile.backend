@@ -52,4 +52,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # --workers 1  keeps peak RSS under 450 MB during simultaneous ingestion.
 # --timeout 120 allows the model to finish loading on a cold CPU start
 #               before Gunicorn considers the worker hung and kills it.
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout 120"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 120"]
