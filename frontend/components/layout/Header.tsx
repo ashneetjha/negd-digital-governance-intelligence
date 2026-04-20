@@ -3,17 +3,23 @@
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useParams, usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Sun, Moon, Monitor, Languages, Menu } from "lucide-react";
 import { useSidebar } from "./SidebarContext";
 
 export default function Header() {
     const t = useTranslations("header");
     const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const params = useParams();
     const pathname = usePathname();
     const router = useRouter();
     const locale = (params?.locale as string) || "en";
     const { toggle } = useSidebar();
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const toggleLanguage = () => {
         const newLocale = locale === "en" ? "hi" : "en";
@@ -27,14 +33,11 @@ export default function Header() {
         else setTheme("light");
     };
 
-    const resolvedTheme = theme ?? "system";
+    const resolvedTheme = mounted ? (theme ?? "system") : "system";
     const ThemeIcon = resolvedTheme === "light" ? Sun : resolvedTheme === "dark" ? Moon : Monitor;
 
     return (
-        <header className="sticky top-0 z-[60] flex items-center justify-between px-4 h-16 
-            backdrop-blur-2xl bg-white/80 
-            dark:bg-indigo-950/40 border-b border-gray-200/50 
-            dark:border-indigo-500/20 shadow-[0_4px_30px_rgba(0,0,0,0.1)] transition-all duration-500">
+        <header className="sticky top-0 z-[60] flex items-center justify-between px-4 h-16 backdrop-blur-2xl bg-gradient-to-r from-indigo-900/40 to-blue-900/40 border-b border-gray-200/50 dark:border-indigo-500/20 shadow-lg transition-all duration-500">
             
             {/* Left Section: Mobile Menu Toggle */}
             <div className="flex items-center justify-start w-auto sm:w-[120px] lg:w-[150px] flex-shrink-0">
@@ -51,8 +54,8 @@ export default function Header() {
             {/* Center Section: Symmetrical Logos and Stylized Title */}
             <div className="flex flex-1 items-center justify-center min-w-0 px-2 gap-4 lg:gap-10">
                 
-                {/* Branding Side (Hidden on smaller mobile) */}
-                <div className="hidden md:flex items-center gap-5 lg:gap-7">
+                {/* Branding Side — visible on sm+ (tablets and large phones) */}
+                <div className="hidden sm:flex items-center gap-5 lg:gap-7">
                     <img
                         src="/Ministry_of_Electronics_and_Information_Technology_Logo.png"
                         alt="MeitY"
@@ -79,8 +82,8 @@ export default function Header() {
                     </h1>
                 </div>
 
-                {/* Institution Side (Hidden on smaller mobile) */}
-                <div className="hidden md:flex items-center">
+                {/* Institution Side — visible on sm+ */}
+                <div className="hidden sm:flex items-center">
                     <img
                         src="/IIT_RPR_Logo.png"
                         alt="IIT Ropar"

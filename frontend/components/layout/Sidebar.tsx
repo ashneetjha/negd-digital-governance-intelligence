@@ -8,9 +8,13 @@ import {
     Upload,
     Search,
     GitCompare,
+    Shuffle,
+    Bot,
     FileText,
     Settings,
     X,
+    BarChart3,
+    Trophy,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { useSidebar } from "./SidebarContext";
@@ -19,7 +23,11 @@ const navItems = [
     { key: "dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { key: "upload", icon: Upload, href: "/upload" },
     { key: "analysis", icon: Search, href: "/analysis" },
-    { key: "compare", icon: GitCompare, href: "/compare" },
+    { key: "compareMonth", icon: GitCompare, href: "/compare" },
+    { key: "compareCrossState", icon: Shuffle, href: "/compare/cross-state" },
+    { key: "intelligence", icon: BarChart3, href: "/intelligence" },
+    { key: "ranking", icon: Trophy, href: "/ranking" },
+    { key: "chatbot", icon: Bot, href: "/chat" },
     { key: "reports", icon: FileText, href: "/reports" },
 ];
 
@@ -45,9 +53,9 @@ export default function Sidebar() {
                 onClick={close}
                 className={clsx(
                     // Added ambient-glow right here! 👇
-                    "ambient-glow flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
+                    "ambient-glow flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group hover:bg-gray-800/50",
                     active
-                        ? "text-blue-700 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-900/30 shadow-sm"
+                        ? "text-indigo-300 bg-indigo-600/20 border border-indigo-500/30 shadow-sm"
                         : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10"
                 )}
                 aria-current={active ? "page" : undefined}
@@ -56,7 +64,7 @@ export default function Sidebar() {
                     "w-4 h-4 flex-shrink-0 transition-colors duration-200",
                     active ? "text-blue-600 dark:text-blue-400" : "group-hover:text-gray-900 dark:group-hover:text-white"
                 )} />
-                <span className="truncate">{t(item.key as "dashboard" | "upload" | "analysis" | "compare" | "reports" | "settings")}</span>
+                <span className="truncate">{t(item.key as "dashboard" | "upload" | "analysis" | "compareMonth" | "compareCrossState" | "intelligence" | "ranking" | "chatbot" | "reports" | "settings")}</span>
                 {active && <div className="ml-auto w-1 h-4 rounded-full bg-blue-600 dark:bg-blue-400 shadow-sm" />}
             </Link>
         );

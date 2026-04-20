@@ -3,7 +3,11 @@
         "dashboard": "Dashboard",
         "upload": "Upload Report",
         "analysis": "Analysis",
-        "compare": "Compare",
+        "compareMonth": "Month Comparison",
+        "compareCrossState": "Cross-State Comparison",
+        "intelligence": "Intelligence Dashboard",
+        "chatbot": "Governance Chatbot",
+        "ranking": "Ranking Dashboard",
         "reports": "Reports",
         "settings": "Settings"
     },
@@ -63,7 +67,7 @@
         "notFound": "Information not found in selected reports."
     },
     "compare": {
-        "title": "Compare Reports",
+        "title": "Month Comparison",
         "subtitle": "Compare governance reporting across two months for the same state",
         "state": "State / UT",
         "monthA": "Month A (Earlier)",
@@ -84,6 +88,33 @@
         "area": "Area",
         "noChanges": "No changes detected",
         "noResult": "Select a state and two months to compare."
+    },
+    "crossState": {
+        "title": "Cross-State Comparison",
+        "subtitle": "Benchmark digital governance performance across two states",
+        "stateA": "State A",
+        "monthA": "Month A",
+        "stateB": "State B",
+        "monthB": "Month B",
+        "topic": "Topic Focus (optional)",
+        "topicPlaceholder": "e.g. DigiLocker adoption, cyber security",
+        "submit": "Compare States",
+        "comparing": "Comparing...",
+        "summary": "Cross-State Summary",
+        "differences": "Key Differences",
+        "commonalities": "Commonalities",
+        "recommendations": "Recommendations",
+        "noResult": "Select two states and months to compare.",
+        "fallbackError": "Comparison unavailable right now. Please retry."
+    },
+    "chat": {
+        "title": "Governance Chatbot",
+        "subtitle": "Ask policy and Digital India questions (non-RAG)",
+        "placeholder": "Ask about DigiLocker, UMANG, BharatNet, NeGD workflows...",
+        "send": "Send",
+        "sending": "Thinking...",
+        "empty": "No chat yet. Ask your first question.",
+        "fallback": "I could not process that just now. Please try a shorter question."
     },
     "reports": {
         "title": "Reports",

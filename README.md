@@ -1,111 +1,127 @@
-NeGD Digital Governance Intelligence Portal
-===========================================
+# NeGD Digital Governance Intelligence System
 
-AI-powered Governance Intelligence System for the **National e-Governance Division (NeGD)**, MeitY, Government of India.
+> **AI-Powered Governance Analytics Platform for the National e-Governance Division (NeGD), MeitY, Government of India**
 
-Developed by **IIT Ropar** in collaboration with NeGD, this system automates the ingestion of monthly state-level reports to provide prompt-driven extraction, comparative analysis, and high-level governance insights.
+A production-grade **hybrid AI intelligence system** that transforms governance reports into actionable insights. Built for decision-makers at NeGD, MeitY, and state-level digital governance teams.
 
-🏛️ Project Vision
-------------------
+## ✨ Key Features
 
-The portal eliminates the manual overhead of analyzing text-heavy monthly reports. It provides a prompt-driven intelligence layer using **Retrieval-Augmented Generation (RAG)**, enabling officials to derive qualitative insights and case studies grounded strictly in the provided report content.
+- **Hybrid RAG**: Uses a fusion of vector embeddings (pgvector) and exact match keyword search (BM25), optimized further with neural cross-encoder reranking.
+- **Document Ingestion (PDF/DOCX)**: Intelligent text parsing, chunking, and metadata extraction of structured tables and paragraphs from State Monthly Progress Reports.
+- **Structured AI Outputs**: Guaranteed canonical AI outputs containing grounded answers, top insights, gaps, recommendations, and confidence evaluations.
+- **Governance Dashboards**: Analytics interface for rapid visualization of intelligence, risk alerts, and emerging governance trends.
+- **State Ranking & Gap Analysis**: Multi-dimensional ranking of states on criteria like Activity Level, Innovation Signals, Initiative Diversity, and Timeliness.
 
-🏗️ Architecture
-----------------
+## 🏛️ Architecture Overview
 
-Plaintext
+The platform uses a scalable microservice design divided into an intuitive React frontend and a heavy-lifting intelligent FastAPI backend:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   Frontend (Next.js 14 + Tailwind) [cite: 347, 349]    → FastAPI Backend (Secure Inference Layer) [cite: 367, 371]      → Supabase (Postgres + pgvector)       → SentenceTransformers (all-MiniLM-L6-v2)       → Groq LLaMA 3.1 8B Instant (LLM)   `
+- **Frontend (Next.js)**: Rich analytics dashboard with bilingual support, dark mode toggles, and hydration-safe SSR rendering.
+- **Intelligent Routing**: Determines if a query should target document retrieval (RAG), cross-state comparison, or global insight extraction.
+- **AI Processing Pipeline**:
+  - LLM-powered Query Rewriting
+  - Hybrid Retrieval (Vector + Keyword)
+  - HF API Cross-Encoder Reranking
+  - Confidence Scoring & 4-Rule Verification
 
-✨ Premium Features
-------------------
+## 🛠️ Tech Stack
 
-*   **Semantic Document Ingestion**: Intelligent extraction and chunking of DOCX/PDF reports.
-    
-*   **Vector-Based Intelligence**: 384-dim semantic embeddings stored in pgvector for high-speed contextual retrieval.
-    
-*   **Comparative Intelligence**: Structured JSON comparisons detecting month-to-month initiatives, improvements, and compliance gaps.
-    
-*   **Hallucination Control**: Strict RAG grounding with deterministic generation and automated citation enforcement.
-    
-*   **GovTech UI**: Premium glassmorphic interface with bilingual support (English/Hindi) and mobile-first responsive design.
-    
-*   **Diagnostics Dashboard**: Real-time system health checks for database connectivity and AI model readiness.
-    
+- **Frontend**: Next.js 14, TailwindCSS, Framer Motion, TypeScript
+- **Backend**: FastAPI, Pydantic, Uvicorn
+- **Database**: Supabase PostgreSQL with `pgvector` extension
+- **Machine Learning**: 
+  - LLM: Groq LLaMA 3.3-70B Versatile
+  - Embeddings & Reranking: HuggingFace Inference API (`intfloat/e5-small-v2`, `cross-encoder/ms-marco-MiniLM-L-6-v2`)
 
-🛠️ Tech Stack
---------------
+## 🚀 Setup Instructions
 
-**LayerTechnologyFrontend**
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- Supabase Project with `pgvector`
+- Groq API Key and HuggingFace API Token 
 
-Next.js 14 (App Router) , TypeScript , Tailwind CSS , Framer Motion , next-intl
+### Backend Setup
 
-**Backend**
+1. **Clone the repository and enter the backend directory**:
+   ```bash
+   git clone https://github.com/your-org/negd-digital-governance-intelligence.git
+   cd negd-digital-governance-intelligence/backend
+   ```
+2. **Create and activate a virtual environment**:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows use: .venv\Scripts\Activate.ps1
+   ```
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Start the backend server**:
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-FastAPI , Pydantic , Structlog , Docker
+### Frontend Setup
 
-**Database**
+1. **Enter the frontend directory**:
+   ```bash
+   cd ../frontend
+   ```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Start the frontend development server**:
+   ```bash
+   npm run dev
+   ```
 
-Supabase (PostgreSQL) + pgvector extension
+## ⚙️ Environment Variables
 
-**Embeddings**
+Create `.env` in the `backend/` directory:
 
-local SentenceTransformers (all-MiniLM-L6-v2)
+```env
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=eyJhbG...
+GROQ_API_KEY=gsk_...
+GROQ_MODEL=llama-3.3-70b-versatile
+HF_API_TOKEN=hf_...
+ALLOWED_ORIGINS=http://localhost:3000
+APP_ENV=development
+```
 
-**LLM**Groq (LLaMA 3.1 8B Instant)**Infra**
+Create `.env.local` in the `frontend/` directory (if different from default):
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-Render (Backend) , Netlify/Vercel (Frontend)
+## 🌐 Deployment
 
-🚀 Quick Start (Local Development)
-----------------------------------
+### Backend (Render Free Tier)
+Deploy using the Render Web Service specification.
+- **Build Command**: `pip install -r requirements-render.txt`
+- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 
-### 1\. Backend Setup
+Ensure all Environment Variables are configured in the Render Dashboard. (No heavy local AI models are loaded; embeddings and rerankers use remote APIs). 
 
-Bash
+### Frontend (Netlify)
+Connect your GitHub repository to Netlify.
+- **Build Command**: `npm run build`
+- **Publish Directory**: `.next`
+- **Environment Variables**: Add `NEXT_PUBLIC_API_URL` pointing to your deployed backend.
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   cd backend  python -m venv .venv  # Activate: .venv\Scripts\activate (Win) or source .venv/bin/activate (Unix)  pip install -r requirements.txt   `
+## 🖼️ UI/Screenshots Description
 
-**Environment Variables (.env):**Set your SUPABASE\_URL, SUPABASE\_KEY, and GROQ\_API\_KEY. Set STRICT\_REAL\_AI=true to enforce grounded RAG responses.
+The frontend features dynamic, responsive UI elements utilizing modern web design aesthetics:
+- **System Status Dashboard**: Displays realtime connection capacities with the backend services through an interactive, glassmorphic diagnostic interface.
+- **Governance Intelligence Dashboard**: A complex analytical grid exhibiting real-time rankings, top metrics, and interactive date-filters (MonthYear Picker). 
+- **Compare States Interface**: Visually stunning dual-column comparison module mapping state metrics precisely.
 
-**Run Preflight & Start:**
+---
 
-Bash
+### 👨‍💻 Author
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   python scripts/preflight.py  # Verify environment health [cite: 35, 149]  uvicorn app.main:app --reload [cite: 168]   `
-
-### 2\. Frontend Setup
-
-Bash
-
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   cd frontend  npm install [cite: 161]  npm run dev [cite: 164]   `
-
-🌐 Production Deployment
-------------------------
-
-### Backend — Render
-
-### Frontend — Netlify
-
-📁 Project Structure
---------------------
-
-*   backend/: FastAPI application, ingestion pipelines, and database migrations.
-    
-*   frontend/: Next.js portal with internationalization (i18n) and GovTech components.
-    
-*   ml/: Centralized prompt governance (system\_prompt.txt) and RAG pipelines.
-    
-*   infra/: Production deployment configurations for Docker, Render, and Netlify.
-    
-
-⚖️ Governance & Compliance
---------------------------
-
-*   **Zero Hallucination Policy**: All AI responses must be traceable to a source chunk.
-    
-*   **Audit Ready**: Every extraction includes state, month, and section citations.
-    
-*   **Open Source**: Built entirely on an open-source stack (Postgres, Python, Next.js).
-    
-
-Developed by Ashneet Jha ([ashneetjha.netlify.app](https://ashneetjha.netlify.app)), Intern at IIT Ropar for National e-Governance Division (NeGD), MeitY.
+**Ashneet Jha**  
+Intern, IIT Ropar | SRM IST, KTR  
+Portfolio: [https://ashneetjha.netlify.app/](https://ashneetjha.netlify.app/)

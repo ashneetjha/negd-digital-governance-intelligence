@@ -18,11 +18,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Read the backend URL from Next.js public env var; fall back to the
-// canonical Render service URL so the build works without extra config.
-const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL ??
-    "https://negd-portal-backend.onrender.com";
+// Read the backend URL from Next.js public env var;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 const PING_URL = `${API_BASE}/api/ping`;
 

@@ -23,7 +23,7 @@
 * **Frontend:** Next.js 16 + Tailwind CSS
 * **Backend:** FastAPI (Python)
 * [cite_start]**Database:** Supabase (PostgreSQL) with `pgvector` for semantic search [cite: 8, 28]
-* [cite_start]**Embeddings:** `all-MiniLM-L6-v2` (Sentence-Transformers) 
+* [cite_start]**Embeddings:** `paraphrase-MiniLM-L3-v2` (Sentence-Transformers) 
 * [cite_start]**LLM:** Groq LLaMA 3.1 8B / Google Gemini (Deterministic configuration) [cite: 11, 28]
 
 ---

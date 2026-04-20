@@ -170,7 +170,7 @@ export default function SettingsPage() {
                     {[
                         { label: t("backendStatus"), status: backendStatus, url: `${API_BASE}/health` },
                         { label: t("aiStatus"), status: aiStatus, url: "Groq API (via backend system status)" },
-                        { label: "Embeddings (SentenceTransformers)", status: embeddingStatus, url: "all-MiniLM-L6-v2" },
+                        { label: "Embeddings (SentenceTransformers)", status: embeddingStatus, url: "paraphrase-MiniLM-L3-v2" },
                     ].map(({ label, status, url }) => (
                         <div key={label} className="flex items-center justify-between py-1 border-b border-gray-50 dark:border-gray-800/50 last:border-0">
                             <div>

@@ -3,7 +3,7 @@
  */
 
 const DEFAULT_API_URL = "http://localhost:8000";
-const REQUEST_TIMEOUT_MS = 12000;
+const REQUEST_TIMEOUT_MS = 30000;
 
 function resolveApiBase(rawBase: string | undefined): string {
     const base = (rawBase || DEFAULT_API_URL).trim().replace(/\/+$/, "");

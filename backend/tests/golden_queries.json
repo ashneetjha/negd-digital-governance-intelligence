@@ -1,0 +1,101 @@
+[
+  {
+    "id": "q1",
+    "query": "Has DigiLocker adoption improved in Kerala?",
+    "state": "Kerala",
+    "month": null,
+    "expected_keywords": ["increase", "growth", "improvement", "adoption", "DigiLocker"],
+    "expected_entities": ["DigiLocker", "Kerala"],
+    "type": "rag",
+    "description": "State-specific policy adoption trend query"
+  },
+  {
+    "id": "q2",
+    "query": "What are the key digital governance initiatives in Delhi?",
+    "state": "Delhi",
+    "month": null,
+    "expected_keywords": ["initiative", "digital", "governance", "scheme", "implementation"],
+    "expected_entities": ["Delhi"],
+    "type": "rag",
+    "description": "State-level initiative overview"
+  },
+  {
+    "id": "q3",
+    "query": "Compare Delhi and Maharashtra digital initiatives",
+    "state_a": "Delhi",
+    "month_a": "2025-01",
+    "state_b": "Maharashtra",
+    "month_b": "2025-01",
+    "expected_keywords": ["difference", "adoption", "initiative", "compare", "progress"],
+    "expected_entities": ["Delhi", "Maharashtra"],
+    "type": "cross_state",
+    "description": "Cross-state comparison query"
+  },
+  {
+    "id": "q4",
+    "query": "What is the status of e-District implementation across states?",
+    "state": null,
+    "month": null,
+    "expected_keywords": ["e-District", "implementation", "status", "rollout", "progress"],
+    "expected_entities": ["e-District"],
+    "type": "rag",
+    "description": "Cross-state scheme status query (no state filter)"
+  },
+  {
+    "id": "q5",
+    "query": "What compliance changes occurred in Tamil Nadu between January and February 2025?",
+    "state": "Tamil Nadu",
+    "month_a": "2025-01",
+    "month_b": "2025-02",
+    "expected_keywords": ["compliance", "change", "update", "status"],
+    "expected_entities": ["Tamil Nadu"],
+    "type": "compare",
+    "description": "Same-state month-to-month compliance comparison"
+  },
+  {
+    "id": "q6",
+    "query": "How many services are available on the UMANG platform?",
+    "state": null,
+    "month": null,
+    "expected_keywords": ["UMANG", "services", "platform", "mobile"],
+    "expected_entities": ["UMANG"],
+    "type": "rag",
+    "description": "Platform-specific factual query"
+  },
+  {
+    "id": "q7",
+    "query": "What is DigiLocker and how does it work?",
+    "expected_keywords": ["DigiLocker", "document", "digital", "storage", "issued"],
+    "expected_entities": ["DigiLocker"],
+    "type": "chat",
+    "description": "General knowledge chatbot query (no RAG)"
+  },
+  {
+    "id": "q8",
+    "query": "Explain the BharatNet programme and its impact on rural connectivity",
+    "expected_keywords": ["BharatNet", "rural", "connectivity", "broadband", "panchayat"],
+    "expected_entities": ["BharatNet"],
+    "type": "chat",
+    "description": "General knowledge chatbot query on infrastructure scheme"
+  },
+  {
+    "id": "q9",
+    "query": "What progress has Gujarat made in digital governance?",
+    "state": "Gujarat",
+    "month": null,
+    "expected_keywords": ["Gujarat", "digital", "governance", "progress", "initiative"],
+    "expected_entities": ["Gujarat"],
+    "type": "rag",
+    "description": "State-specific progress query"
+  },
+  {
+    "id": "q10",
+    "query": "What are the cybersecurity measures adopted by Indian states?",
+    "state": null,
+    "month": null,
+    "expected_keywords": ["cybersecurity", "security", "measures", "policy", "protection"],
+    "expected_entities": [],
+    "type": "rag",
+    "description": "Thematic cross-state query"
+  }
+]

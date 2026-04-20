@@ -2,7 +2,7 @@
 System diagnostics route.
 
 GET /api/ping          — ultra-lightweight keep-alive (no DB / model calls)
-GET /api/system/status — full diagnostic probe
+GET /api/system/status — full diagnostic probe + RAG health metrics
 """
 
 import time
@@ -14,6 +14,7 @@ from fastapi import APIRouter
 from app.config import settings
 from app.db.database import get_supabase
 from app.services.embedding_service import get_embedding_status
+from app.services.evaluation_service import get_health_metrics
 from app.utils.logger import get_logger
 
 router = APIRouter()
@@ -46,7 +47,7 @@ async def get_system_status() -> dict[str, Any]:
     payload: dict[str, Any] = {
         "backend": {
             "status": "ok",
-            "version": "1.0.0",
+            "version": "3.0.0",
             "environment": settings.APP_ENV,
         },
         "supabase": {
@@ -96,6 +97,7 @@ async def get_system_status() -> dict[str, Any]:
     emb_status = get_embedding_status()
     payload["embedding"]["loaded"] = emb_status["loaded"]
     payload["embedding"]["boot_status"] = emb_status["status"]
+    payload["embedding"]["mode"] = emb_status.get("mode", "unknown")
     if emb_status["error"]:
         payload["embedding"]["error"] = emb_status["error"]
     elif emb_status["status"] == "loading":
@@ -117,6 +119,21 @@ async def get_system_status() -> dict[str, Any]:
     else:
         payload["groq"]["error"] = "GROQ_API_KEY not configured."
 
+    # ── Task 8: RAG Health Metrics ────────────────────────────────────────────
+    rag_health_metrics = get_health_metrics()
+    payload["rag_health"] = {
+        "status": "healthy" if rag_health_metrics["last_query_status"] != "error" else "degraded",
+        "queries_tracked": rag_health_metrics["queries_tracked"],
+        "avg_latency_ms": rag_health_metrics["avg_latency_ms"],
+        "avg_confidence": rag_health_metrics["avg_confidence"],
+        "avg_context_precision": rag_health_metrics["avg_context_precision"],
+        "avg_citation_density": rag_health_metrics["avg_citation_density"],
+        "success_rate": rag_health_metrics["success_rate"],
+        "last_query_status": rag_health_metrics["last_query_status"],
+    }
+    payload["embedding_mode"] = emb_status.get("mode", "unknown")
+
+    # Determine overall health
     strict_ok = (
         payload["supabase"]["reachable"]
         and payload["embedding"]["loaded"]
@@ -132,6 +149,7 @@ async def get_system_status() -> dict[str, Any]:
         overall_status=payload["overall_status"],
         strict_mode=settings.STRICT_REAL_AI,
         latency_ms=payload["latency_ms"],
+        rag_queries=rag_health_metrics["queries_tracked"],
+        avg_confidence=rag_health_metrics["avg_confidence"],
     )
     return payload
-

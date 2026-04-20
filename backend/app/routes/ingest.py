@@ -13,7 +13,6 @@ import os
 import re
 import json
 from uuid import uuid4
-from datetime import datetime
 
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
@@ -45,30 +44,63 @@ def _validate_month_format(month: str):
 
 
 # ---------------------------------------------------------
-# Background Pipeline
+# Background Pipeline (FIXED)
 # ---------------------------------------------------------
 
-def _run_pipeline(report_id: str, file_path: str) -> None:
+def _run_pipeline(
+    report_id: str,
+    file_path: str,
+    state: str,
+    reporting_month: str,
+    scheme: str,
+) -> None:
     supabase = get_supabase()
 
     try:
+        # Step 1: mark processing
         supabase.table("reports").update({
             "processed_status": "processing"
         }).eq("id", report_id).execute()
 
+        # Step 2: parse document
         pages = parse_document(file_path)
-        chunks = chunk_pages(pages)
-        count = store_chunks(report_id, chunks)
+        logger.info("Parsed text blocks", report_id=report_id, count=len(pages))
 
+        # Step 3: chunking
+        chunks = chunk_pages(pages)
+        logger.info("Chunks created", report_id=report_id, count=len(chunks))
+
+        # Step 4: store chunks WITH METADATA 
+        count = store_chunks(
+            report_id=report_id,
+            chunks=chunks,
+            state=state,
+            reporting_month=reporting_month,
+            scheme=scheme,
+        )
+        logger.info("Chunks stored", report_id=report_id, count=count)
+
+        if count == 0:
+            raise Exception("CRITICAL: No chunks stored - ingestion invalid")
+
+        # Step 5: mark success
         supabase.table("reports").update({
             "processed_status": "indexed",
             "chunk_count": count,
         }).eq("id", report_id).execute()
 
-        logger.info("Ingestion complete", report_id=report_id, chunks=count)
+        logger.info(
+            "Ingestion complete",
+            report_id=report_id,
+            chunks=count
+        )
 
     except Exception as exc:
-        logger.error("Ingestion failed", report_id=report_id, error=str(exc))
+        logger.error(
+            "Ingestion failed",
+            report_id=report_id,
+            error=str(exc)
+        )
 
         supabase.table("reports").update({
             "processed_status": "failed",
@@ -83,7 +115,7 @@ def _run_pipeline(report_id: str, file_path: str) -> None:
 
 
 # ---------------------------------------------------------
-# API Route
+# API Route (FIXED)
 # ---------------------------------------------------------
 
 @router.post("/ingest")
@@ -96,6 +128,7 @@ async def ingest_document(
     semt_team: str = Form(default=None),
 ):
 
+    # File validation
     allowed_types = {
         "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -112,6 +145,7 @@ async def ingest_document(
 
     _validate_month_format(reporting_month)
 
+    # File size check
     max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
     content = await file.read()
 
@@ -124,6 +158,7 @@ async def ingest_document(
             },
         )
 
+    # Save file temporarily
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
     file_ext = ".docx" if "word" in (file.content_type or "") else ".pdf"
@@ -132,7 +167,7 @@ async def ingest_document(
     with open(temp_path, "wb") as f:
         f.write(content)
 
-    # Parse semt_team JSON if provided
+    # Parse semt_team JSON
     semt_team_data = None
     if semt_team:
         try:
@@ -146,6 +181,7 @@ async def ingest_document(
                 },
             )
 
+    # Insert report metadata
     supabase = get_supabase()
     report_id = str(uuid4())
 
@@ -159,7 +195,15 @@ async def ingest_document(
         "processed_status": "pending",
     }).execute()
 
-    background_tasks.add_task(_run_pipeline, report_id, temp_path)
+    # 🔥 CRITICAL FIX: PASS METADATA TO PIPELINE
+    background_tasks.add_task(
+        _run_pipeline,
+        report_id,
+        temp_path,
+        state,
+        reporting_month,
+        scheme,
+    )
 
     logger.info(
         "Ingest queued",

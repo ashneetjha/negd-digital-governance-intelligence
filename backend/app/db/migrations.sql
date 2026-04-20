@@ -58,6 +58,9 @@ CREATE INDEX IF NOT EXISTS idx_sections_type ON report_sections(section_type);
 
 ----------------------------------------------------------
 -- 4. Report Chunks (RAG layer with embeddings)
+--
+-- Model: paraphrase-MiniLM-L3-v2 (384-dim via HF Inference API)
+-- Deduplication: chunk_hash (SHA-256) ensures no duplicate content
 ----------------------------------------------------------
 CREATE TABLE IF NOT EXISTS report_chunks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -70,12 +73,16 @@ CREATE TABLE IF NOT EXISTS report_chunks (
     page_number INT DEFAULT NULL,
     chunk_index INT DEFAULT 0,
 
-    embedding VECTOR(384),
+    -- SHA-256 hash of chunk_text for deduplication at ingestion time
+    chunk_hash TEXT DEFAULT NULL,
+
+    embedding VECTOR(384),            -- paraphrase-MiniLM-L3-v2 produces 384-dim
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_chunks_report_id ON report_chunks(report_id);
 CREATE INDEX IF NOT EXISTS idx_chunks_section_type ON report_chunks(section_type);
+CREATE INDEX IF NOT EXISTS idx_chunks_hash ON report_chunks(chunk_hash);
 
 CREATE INDEX IF NOT EXISTS idx_chunks_embedding
     ON report_chunks
@@ -83,7 +90,19 @@ CREATE INDEX IF NOT EXISTS idx_chunks_embedding
     WITH (lists = 100);
 
 ----------------------------------------------------------
+-- MIGRATION: Add chunk_hash to existing report_chunks table
+-- Run this if the table already exists (idempotent)
+----------------------------------------------------------
+ALTER TABLE report_chunks ADD COLUMN IF NOT EXISTS chunk_hash TEXT DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS idx_chunks_hash ON report_chunks(chunk_hash);
+
+----------------------------------------------------------
 -- 5. Semantic Search Function
+--    Returns page_number for full metadata enrichment in context blocks.
+--
+-- NOTE: This replaces the previous version of match_chunks.
+--       The embedding dimension remains VECTOR(384).
+--       Filter parameters are unchanged (backward compatible).
 ----------------------------------------------------------
 CREATE OR REPLACE FUNCTION match_chunks(
     query_embedding VECTOR(384),
@@ -100,6 +119,7 @@ RETURNS TABLE (
     practice_area TEXT,
     state TEXT,
     reporting_month TEXT,
+    page_number INT,
     similarity FLOAT
 )
 LANGUAGE plpgsql
@@ -114,6 +134,7 @@ BEGIN
         rc.practice_area,
         r.state,
         r.reporting_month,
+        rc.page_number,
         1 - (rc.embedding <=> query_embedding) AS similarity
     FROM report_chunks rc
     JOIN reports r ON rc.report_id = r.id
@@ -129,6 +150,7 @@ $$;
 
 ----------------------------------------------------------
 -- 6. Comparison Function
+--    Unchanged — returns page_number now for consistency.
 ----------------------------------------------------------
 CREATE OR REPLACE FUNCTION match_chunks_for_comparison(
     query_embedding VECTOR(384),
@@ -145,6 +167,7 @@ RETURNS TABLE (
     practice_area TEXT,
     state TEXT,
     reporting_month TEXT,
+    page_number INT,
     similarity FLOAT
 )
 LANGUAGE plpgsql
@@ -159,6 +182,7 @@ BEGIN
         rc.practice_area,
         r.state,
         r.reporting_month,
+        rc.page_number,
         1 - (rc.embedding <=> query_embedding) AS similarity
     FROM report_chunks rc
     JOIN reports r ON rc.report_id = r.id

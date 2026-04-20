@@ -11,7 +11,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
-from app.services.comparison_service import run_comparison
+from app.services.comparison_service import run_comparison, compare_cross_state
 from app.utils.logger import get_logger
 
 logger = get_logger("compare_pipeline")
@@ -24,15 +24,49 @@ def main():
     parser.add_argument("--month-b", required=True, help="Later month (YYYY-MM)")
     parser.add_argument("--topic", help="Specific topic to compare (optional)")
     parser.add_argument("--json", action="store_true", help="Output raw JSON")
+    parser.add_argument("--state-b", help="Second state for cross-state comparison (optional)")
+    parser.add_argument("--month-c", help="Month for state-b in cross-state comparison (defaults to month-a)")
     args = parser.parse_args()
 
     print(f"\n{'='*60}")
     print(f"State:   {args.state}")
     print(f"Month A: {args.month_a}")
     print(f"Month B: {args.month_b}")
+    if args.state_b:
+        print(f"State B: {args.state_b}")
     if args.topic:
         print(f"Topic:   {args.topic}")
     print(f"{'='*60}\n")
+
+    # Cross-state mode
+    if args.state_b:
+        month_b_for_state_b = args.month_c or args.month_a
+        result = compare_cross_state(
+            state_a=args.state,
+            month_a=args.month_a,
+            state_b=args.state_b,
+            month_b=month_b_for_state_b,
+            topic=args.topic,
+        )
+        if args.json:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return
+        print("CROSS-STATE SUMMARY")
+        print("-" * 60)
+        print(result.get("summary", "—"))
+        for key, label in [
+            ("state_a_strengths", f"{args.state} STRENGTHS"),
+            ("state_b_strengths", f"{args.state_b} STRENGTHS"),
+            ("common_initiatives", "COMMON INITIATIVES"),
+            ("recommendations", "RECOMMENDATIONS"),
+        ]:
+            items = result.get(key, [])
+            if items:
+                print(f"\n{label} ({len(items)})")
+                print("-" * 60)
+                for item in items:
+                    print(f"  • {item}")
+        return
 
     result = run_comparison(
         state=args.state,

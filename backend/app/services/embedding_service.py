@@ -1,29 +1,17 @@
 """
-Embedding Service — generates sentence embeddings using sentence-transformers
-and upserts them to Supabase pgvector.
+Embedding service using HuggingFace Inference API only.
 
-Boot-safety design
-──────────────────
-On Render's free tier the first request may arrive while the CPU is still
-loading the SentenceTransformer model (~20-40 s on cold start).  A bare
-@lru_cache approach caches a None/exception on the first attempt and never
-retries, so the status dashboard permanently shows "Disconnected" even when
-the model later becomes available.
-
-Instead we use a thread-safe singleton with explicit state tracking:
-  "idle"    – model has never been attempted
-  "loading" – a background thread is warming the model right now
-  "ready"   – model loaded successfully
-  "failed"  – last attempt raised an exception (retried after RETRY_COOLDOWN_S)
-
-The system-status probe calls get_embedding_status() which returns the state
-dict without triggering a blocking load, so health checks stay fast.
+This service never generates fake embeddings. On HF failure it returns None so
+the rest of the pipeline can fall back to BM25 or store chunks without vectors.
 """
 
+import hashlib
 import math
 import threading
-import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+
+import requests
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from app.config import settings
 from app.db.database import get_supabase
@@ -32,138 +20,124 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# How many seconds to wait before retrying after a failed load
-_RETRY_COOLDOWN_S: float = 30.0
+_HF_MODEL = settings.EMBEDDING_MODEL
+_HF_API_URL = f"{settings.HF_API_BASE}/{_HF_MODEL}"
+_HF_REQUEST_TIMEOUT = 30.0
 
-# ── Thread-safe singleton state ───────────────────────────────────────────────
 _lock = threading.Lock()
 _state: Dict[str, Any] = {
-    "status": "idle",   # idle | loading | ready | failed
+    "status": "idle",
     "model": None,
     "error": None,
     "last_attempt": 0.0,
 }
 
 
-# -----------------------------
-# Internal helpers
-# -----------------------------
+def _error_payload(error_type: str, message: str, details: str, fallback_used: bool) -> dict:
+    return {
+        "error": True,
+        "error_type": error_type,
+        "message": message,
+        "details": details,
+        "fallback_used": fallback_used,
+    }
 
-def _do_load() -> None:
-    """
-    Blocking load executed in a background thread.
-    Updates _state in-place; never raises to the caller.
-    """
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_fixed(2),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+)
+def _hf_request(inputs: List[str] | str) -> Any:
+    """Call HF Inference API and return parsed JSON or None on failure."""
     try:
-        from sentence_transformers import SentenceTransformer  # noqa: PLC0415
+        if not settings.HF_API_TOKEN:
+            if settings.STRICT_REAL_AI:
+                logger.warning("STRICT_REAL_AI: embeddings unavailable, using BM25 only")
+            logger.warning("Embedding failed -> using BM25 fallback")
+            return None
 
-        logger.info("Loading embedding model", model=settings.EMBEDDING_MODEL)
-        model = SentenceTransformer(settings.EMBEDDING_MODEL)
-
-        with _lock:
-            _state["model"] = model
-            _state["status"] = "ready"
-            _state["error"] = None
-        logger.info("Embedding model ready", model=settings.EMBEDDING_MODEL)
-
+        headers = {"Authorization": f"Bearer {settings.HF_API_TOKEN}"}
+        response = requests.post(
+            _HF_API_URL,
+            headers=headers,
+            json={"inputs": inputs, "options": {"wait_for_model": True}},
+            timeout=_HF_REQUEST_TIMEOUT,
+        )
+        response.raise_for_status()
+        return response.json()
     except Exception as exc:
-        with _lock:
-            _state["model"] = None
-            _state["status"] = "failed"
-            _state["error"] = str(exc)
-        logger.error("Embedding model load failed", error=str(exc))
+        status_code = getattr(getattr(exc, "response", None), "status_code", None)
+        log_kwargs: dict = {"model": _HF_MODEL, "error": str(exc)}
+        if status_code:
+            log_kwargs["http_status"] = status_code
+        if settings.STRICT_REAL_AI:
+            logger.warning("[STRICT_REAL_AI] Embedding API unavailable — falling back to BM25", **log_kwargs)
+        else:
+            logger.warning("Embedding failed -> using BM25 fallback", **log_kwargs)
+        return None
 
 
-def _ensure_loading() -> None:
-    """
-    Kick off a background load if one is not already in progress and the
-    retry cooldown has elapsed.  Returns immediately (non-blocking).
-    """
-    with _lock:
-        now = time.monotonic()
-        if _state["status"] in ("loading", "ready"):
-            return
-        if _state["status"] == "failed":
-            if now - _state["last_attempt"] < _RETRY_COOLDOWN_S:
-                return
-        _state["status"] = "loading"
-        _state["last_attempt"] = now
-
-    t = threading.Thread(target=_do_load, daemon=True, name="embedding-loader")
-    t.start()
+def _mean_pool(vectors: List[List[float]]) -> List[float]:
+    if not vectors:
+        raise RuntimeError(f"Empty token-vector payload received from {_HF_MODEL}")
+    dims = len(vectors[0])
+    sums = [0.0] * dims
+    for vec in vectors:
+        if len(vec) != dims:
+            raise RuntimeError(f"Inconsistent token-vector dimensions received from {_HF_MODEL}")
+        for i, val in enumerate(vec):
+            sums[i] += float(val)
+    count = float(len(vectors))
+    return [v / count for v in sums]
 
 
-# -----------------------------
-# Public API
-# -----------------------------
+def _parse_single_embedding(result: Any) -> List[float]:
+    if not isinstance(result, list) or not result:
+        raise ValueError(f"Unexpected HF API payload: {type(result)}")
 
-def warmup_embedding_model() -> None:
-    """
-    Trigger a non-blocking background warm-up.
-    Call this from the FastAPI startup hook so the model is ready
-    before the first real request arrives.
-    """
-    _ensure_loading()
+    if isinstance(result[0], (int, float)):
+        return _finalize_embedding([float(v) for v in result])
 
+    if isinstance(result[0], list):
+        inner = result[0]
+        if inner and isinstance(inner[0], (int, float)):
+            if len(result) != 1:
+                raise ValueError(f"Single embedding endpoint returned batch payload: {str(result)[:200]}")
+            return _finalize_embedding([float(v) for v in inner])
+        if inner and isinstance(inner[0], list):
+            if len(result) != 1:
+                raise ValueError(f"Single embedding endpoint returned token batch payload: {str(result)[:200]}")
+            return _finalize_embedding(_mean_pool([[float(v) for v in tok] for tok in inner]))
 
-def get_embedding_status() -> Dict[str, Any]:
-    """
-    Return the current model state dict — safe to call from status probes
-    without triggering a blocking load.
-    """
-    with _lock:
-        return {
-            "status": _state["status"],
-            "loaded": _state["status"] == "ready",
-            "error": _state["error"],
-        }
+    raise ValueError(f"Unable to parse single HF embedding response: {str(result)[:200]}")
 
 
-def _load_model():
-    """
-    Return the loaded SentenceTransformer (or None if unavailable).
-    Blocks until the model is ready or raises in STRICT_REAL_AI mode.
-    Triggers a background load if one hasn't started yet.
-    """
-    _ensure_loading()
+def _parse_batch_embeddings(result: Any, expected_batch: int) -> List[List[float]]:
+    if not isinstance(result, list) or not result:
+        raise ValueError(f"Unexpected HF API batch payload: {type(result)}")
 
-    # Fast-path: already ready
-    with _lock:
-        if _state["status"] == "ready":
-            return _state["model"]
+    if isinstance(result[0], (int, float)):
+        if expected_batch != 1:
+            raise ValueError(f"Batch endpoint returned single vector for {expected_batch} inputs")
+        return [_finalize_embedding([float(v) for v in result])]
 
-    # Wait up to 90 s for an in-progress load (covers slow CPU cold starts)
-    deadline = time.monotonic() + 90.0
-    while time.monotonic() < deadline:
-        time.sleep(1.0)
-        with _lock:
-            if _state["status"] == "ready":
-                return _state["model"]
-            if _state["status"] == "failed":
-                break
+    if isinstance(result[0], list) and result[0] and isinstance(result[0][0], (int, float)):
+        if len(result) != expected_batch:
+            raise ValueError(f"HF batch response length {len(result)} does not match input batch {expected_batch}")
+        return [_finalize_embedding([float(v) for v in row]) for row in result]
 
-    # Load failed or timed out
-    if settings.STRICT_REAL_AI:
-        with _lock:
-            err = _state.get("error", "load timed out")
-        logger.error(
-            "SentenceTransformer unavailable in STRICT_REAL_AI mode",
-            error=err,
-        )
-        raise RuntimeError(
-            f"Embedding model unavailable while STRICT_REAL_AI=true: {err}"
-        )
+    if isinstance(result[0], list) and result[0] and isinstance(result[0][0], list):
+        if len(result) != expected_batch:
+            raise ValueError(f"HF token batch response length {len(result)} does not match input batch {expected_batch}")
+        return [_finalize_embedding(_mean_pool([[float(v) for v in tok] for tok in item])) for item in result]
 
-    logger.warning(
-        "SentenceTransformer unavailable — falling back to pseudo-embeddings",
-        error=_state.get("error"),
-    )
-    return None
+    if expected_batch == 1:
+        return [_parse_single_embedding(result)]
 
+    raise ValueError(f"Unable to parse batch HF embeddings response: {str(result)[:200]}")
 
-# -----------------------------
-# Utilities
-# -----------------------------
 
 def _normalize(vector: List[float]) -> List[float]:
     norm = math.sqrt(sum(v * v for v in vector))
@@ -172,93 +146,245 @@ def _normalize(vector: List[float]) -> List[float]:
     return [v / norm for v in vector]
 
 
-def _fallback_embedding(text: str) -> List[float]:
-    """
-    Lightweight fallback (non-production): converts text bytes into a bounded
-    pseudo-vector with deterministic shape.
-    """
-    size = settings.EMBEDDING_DIMENSION
-    values = [0.0] * size
-    data = text.encode("utf-8", errors="ignore")
-    for index, b in enumerate(data):
-        values[index % size] += ((b / 255.0) * 2.0) - 1.0
-    return _normalize(values)
+def _validate_dimension(vector: List[float]) -> List[float]:
+    target = settings.EMBEDDING_DIMENSION
+    if len(vector) != target:
+        raise RuntimeError(f"Unexpected embedding dimension {len(vector)} from {_HF_MODEL}; expected {target}")
+    return vector
 
 
-# -----------------------------
-# Embedding APIs
-# -----------------------------
+def _finalize_embedding(vector: List[float]) -> List[float]:
+    return _normalize(_validate_dimension([float(v) for v in vector]))
 
-def embed_texts(texts: List[str]) -> List[List[float]]:
-    model = _load_model()
 
-    if model is None:
-        if settings.STRICT_REAL_AI:
-            raise RuntimeError("Embedding model unavailable while STRICT_REAL_AI=true.")
-        return [_fallback_embedding(text) for text in texts]
+def _chunk_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()
 
-    embeddings = model.encode(
-        texts,
-        show_progress_bar=False,
-        batch_size=32
+
+def warmup_embedding_model() -> None:
+    if settings.HF_API_TOKEN:
+        logger.info(
+            "HF Inference API configured - embedding mode active",
+            model=_HF_MODEL,
+            hf_token_prefix=settings.HF_API_TOKEN[:8] + "...",
+            strict_mode=settings.STRICT_REAL_AI,
+        )
+    else:
+        logger.error(
+            "HF_API_TOKEN is NOT set - embedding service will fall back to BM25 only",
+            model=_HF_MODEL,
+        )
+
+
+def get_embedding_status() -> Dict[str, Any]:
+    return {
+        "status": "hf_api" if settings.HF_API_TOKEN else "unconfigured",
+        "loaded": bool(settings.HF_API_TOKEN),
+        "error": None if settings.HF_API_TOKEN else "HF_API_TOKEN not set",
+        "mode": f"HuggingFace Inference API - {_HF_MODEL}",
+        "model": _HF_MODEL,
+        "dimension": settings.EMBEDDING_DIMENSION,
+        "strict_real_ai": settings.STRICT_REAL_AI,
+        "fallback_enabled": False,
+    }
+
+
+def embed_texts(texts: List[str], is_query: bool = False) -> Optional[List[List[float]]]:
+    if not texts:
+        return []
+
+    try:
+        response = _hf_request(texts)
+        if response is None:
+            return None
+        embeddings = _parse_batch_embeddings(response, expected_batch=len(texts))
+    except Exception as exc:
+        logger.warning(
+            "Batch embedding failed - switching to safe fallback",
+            **_error_payload(
+                "EMBEDDING_FAILURE",
+                "Batch embedding failed. Falling back to BM25 retrieval or non-vector storage.",
+                str(exc),
+                True,
+            ),
+        )
+        return None
+
+    logger.info(
+        "Batch embeddings generated",
+        model=_HF_MODEL,
+        count=len(embeddings),
+        mode="query" if is_query else "passage",
     )
-
-    return embeddings.tolist()
-
-
-def embed_single(text: str) -> List[float]:
-    model = _load_model()
-
-    if model is None:
-        if settings.STRICT_REAL_AI:
-            raise RuntimeError("Embedding model unavailable while STRICT_REAL_AI=true.")
-        return _fallback_embedding(text)
-
-    embedding = model.encode([text], show_progress_bar=False)
-    return embedding[0].tolist()
+    return embeddings
 
 
-# -----------------------------
-# Storage Logic
-# -----------------------------
+def embed_single(text: str, is_query: bool = True) -> Optional[List[float]]:
+    try:
+        response = _hf_request(text)
+        if response is None:
+            return None
+        embedding = _parse_single_embedding(response)
+    except Exception as exc:
+        logger.warning(
+            "Single embedding failed - switching to safe fallback",
+            **_error_payload(
+                "EMBEDDING_FAILURE",
+                "Single embedding failed. Falling back to BM25 retrieval.",
+                str(exc),
+                True,
+            ),
+        )
+        return None
 
-def store_chunks(report_id: str, chunks: List[TextChunk]) -> int:
-    """
-    Embed all chunks and store them in Supabase report_chunks table.
-    Returns number of stored chunks.
-    """
+    logger.info(
+        "Single embedding generated",
+        model=_HF_MODEL,
+        text_length=len(text),
+        mode="query" if is_query else "passage",
+    )
+    return embedding
 
+
+def _get_existing_hashes(report_id: str) -> set:
+    try:
+        supabase = get_supabase()
+        resp = (
+            supabase.table("report_chunks")
+            .select("chunk_hash")
+            .eq("report_id", report_id)
+            .execute()
+        )
+        return {row["chunk_hash"] for row in (resp.data or []) if row.get("chunk_hash")}
+    except Exception as exc:
+        logger.warning("Could not fetch existing chunk hashes", report_id=report_id, error=str(exc))
+        return set()
+
+
+def _build_chunk_record(
+    report_id: str,
+    chunk: TextChunk,
+    chunk_hash: str,
+    state: Optional[str],
+    reporting_month: Optional[str],
+    scheme: Optional[str],
+    embedding: Optional[List[float]],
+) -> dict:
+    return {
+        "report_id": report_id,
+        "chunk_text": chunk.text,
+        "embedding": embedding,
+        "chunk_index": chunk.chunk_index,
+        "page_number": chunk.page_number,
+        "section_type": chunk.section_type,
+        "practice_area": chunk.practice_area,
+        "chunk_hash": chunk_hash,
+        "state": state,
+        "reporting_month": reporting_month,
+        "scheme": scheme,
+    }
+
+
+def _insert_chunk_records(supabase, report_id: str, records: List[dict], fallback_used: bool) -> int:
+    batch_size = 50
+    stored = 0
+    for i in range(0, len(records), batch_size):
+        batch = records[i:i + batch_size]
+        try:
+            supabase.table("report_chunks").insert(batch).execute()
+            stored += len(batch)
+        except Exception as exc:
+            logger.error(
+                "Insert failed",
+                report_id=report_id,
+                **_error_payload(
+                    "DB_ERROR",
+                    "Failed to store chunk records.",
+                    str(exc),
+                    fallback_used,
+                ),
+            )
+    return stored
+
+
+def store_chunks(
+    report_id: str,
+    chunks: List[TextChunk],
+    report_metadata: Optional[Dict] = None,
+    state: Optional[str] = None,
+    reporting_month: Optional[str] = None,
+    scheme: Optional[str] = None,
+) -> int:
     if not chunks:
         return 0
 
     supabase = get_supabase()
 
-    texts = [chunk.text for chunk in chunks]
-    embeddings = embed_texts(texts)
+    if report_metadata:
+        state = state or report_metadata.get("state")
+        reporting_month = reporting_month or report_metadata.get("reporting_month")
+        scheme = scheme or report_metadata.get("scheme")
 
-    records = []
+    if not state or not reporting_month:
+        try:
+            resp = (
+                supabase.table("reports")
+                .select("state, reporting_month, scheme")
+                .eq("id", report_id)
+                .single()
+                .execute()
+            )
+            if resp.data:
+                state = state or resp.data.get("state")
+                reporting_month = reporting_month or resp.data.get("reporting_month")
+                scheme = scheme or resp.data.get("scheme")
+        except Exception as exc:
+            logger.warning("Metadata fetch failed", error=str(exc))
 
-    for chunk, embedding in zip(chunks, embeddings):
-        records.append({
-            "report_id": report_id,
-            "section_type": chunk.section_type,
-            "practice_area": chunk.practice_area,
-            "chunk_text": chunk.text,
-            "page_number": chunk.page_number,
-            "chunk_index": chunk.chunk_index,
-            "embedding": embedding,
-        })
+    existing_hashes = _get_existing_hashes(report_id)
+    new_chunks = []
+    for chunk in chunks:
+        chunk_h = _chunk_hash(chunk.text)
+        if chunk_h not in existing_hashes:
+            new_chunks.append((chunk, chunk_h))
+            existing_hashes.add(chunk_h)
 
-    # Insert in batches
-    batch_size = 50
+    skipped = len(chunks) - len(new_chunks)
+    if not new_chunks:
+        logger.info("All chunks duplicate", report_id=report_id)
+        return 0
 
-    for i in range(0, len(records), batch_size):
-        batch = records[i : i + batch_size]
-        supabase.table("report_chunks").insert(batch).execute()
+    texts = [chunk.text for chunk, _ in new_chunks]
+    embeddings = embed_texts(texts, is_query=False)
+    if embeddings is None:
+        logger.warning("Embedding unavailable - storing chunks without vectors", report_id=report_id)
+        records = [
+            _build_chunk_record(report_id, chunk, chunk_h, state, reporting_month, scheme, None)
+            for chunk, chunk_h in new_chunks
+        ]
+        stored = _insert_chunk_records(supabase, report_id, records, fallback_used=True)
+        logger.info(
+            "Chunks stored",
+            report_id=report_id,
+            count=stored,
+            skipped=skipped,
+            state=state,
+            vectors_present=False,
+        )
+        return stored
+
+    records = [
+        _build_chunk_record(report_id, chunk, chunk_h, state, reporting_month, scheme, embedding)
+        for (chunk, chunk_h), embedding in zip(new_chunks, embeddings)
+    ]
+    stored = _insert_chunk_records(supabase, report_id, records, fallback_used=False)
 
     logger.info(
         "Chunks stored",
         report_id=report_id,
-        count=len(records)
+        count=stored,
+        skipped=skipped,
+        state=state,
+        vectors_present=True,
     )
-    return len(records)
+    return stored

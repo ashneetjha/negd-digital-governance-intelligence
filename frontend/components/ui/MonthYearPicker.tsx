@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { clsx } from "clsx";
 import { useLocale } from "next-intl";
 
@@ -17,17 +17,17 @@ interface MonthYearPickerProps {
 const MIN_YEAR = 1947;
 
 function buildMonthLabels(locale: string) {
-    const shortFmt = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", { month: "short" });
+    const staticMonths = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
     const fullFmt = new Intl.DateTimeFormat(locale === "hi" ? "hi-IN" : "en-IN", { month: "long" });
-
-    const short: string[] = [];
     const full: string[] = [];
     for (let i = 0; i < 12; i++) {
         const d = new Date(2020, i, 1);
-        short.push(shortFmt.format(d));
         full.push(fullFmt.format(d));
     }
-    return { short, full };
+    return { short: staticMonths, full };
 }
 
 function parseValue(value: string): { year: number | null; monthIndex: number | null } {
@@ -50,6 +50,11 @@ export default function MonthYearPicker({
 }: MonthYearPickerProps) {
     const locale = useLocale();
     const { short: monthShort, full: monthFull } = useMemo(() => buildMonthLabels(locale), [locale]);
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -108,10 +113,6 @@ export default function MonthYearPicker({
         return () => panel.removeEventListener("keydown", onKeyDown);
     }, [open]);
 
-    const isFutureMonth = (monthIdx: number): boolean => (
-        viewYear > currentYear || (viewYear === currentYear && monthIdx > currentMonth)
-    );
-
     const selectMonth = (monthIdx: number) => {
         const next = `${viewYear}-${String(monthIdx + 1).padStart(2, "0")}`;
         onChange(next);
@@ -139,141 +140,124 @@ export default function MonthYearPicker({
         btn?.focus();
     };
 
+    if (!mounted) return null;
+
     return (
-        <div className="relative" ref={wrapperRef}>
+        <div className="relative w-full" ref={wrapperRef}>
             {label && (
                 <label className="label" htmlFor={id}>
                     {label}
                 </label>
             )}
 
-            <button
-                type="button"
-                id={id}
-                onClick={() => setOpen((prev) => !prev)}
-                className={clsx("input-field flex items-center gap-2 text-left w-full", !value && "text-[var(--text-muted)]")}
-                aria-haspopup="dialog"
-                aria-expanded={open}
-            >
-                <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-muted)]" />
-                <span className="flex-1 truncate">{displayValue || placeholder}</span>
-            </button>
-
-            {open && (
-                <div
-                    ref={panelRef}
-                    className="absolute z-50 mt-1 w-72 card p-3 shadow-lg animate-fade-in"
-                    style={{ backgroundColor: "var(--bg-surface)" }}
-                    role="dialog"
-                    aria-label="Month year picker"
+            <div className="relative w-full">
+                <button
+                    type="button"
+                    id={id}
+                    onClick={() => setOpen((prev) => !prev)}
+                    className={clsx("input-field flex items-center gap-2 text-left w-full", !value && "text-[var(--text-muted)]")}
+                    aria-haspopup="dialog"
+                    aria-expanded={open}
                 >
-                    <div className="flex items-center justify-between mb-3 gap-1">
-                        <button
-                            type="button"
-                            onClick={() => setViewYear((y) => Math.max(MIN_YEAR, y - 10))}
-                            className="p-1 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] transition-colors"
-                            aria-label="Previous decade"
-                        >
-                            <ChevronsLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewYear((y) => Math.max(MIN_YEAR, y - 1))}
-                            className="p-1 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] transition-colors"
-                            aria-label="Previous year"
-                            disabled={viewYear <= MIN_YEAR}
-                        >
-                            <ChevronLeft className={clsx("w-4 h-4", viewYear <= MIN_YEAR && "opacity-30")} />
-                        </button>
+                    <Calendar className="w-3.5 h-3.5 flex-shrink-0 text-[var(--text-muted)]" />
+                    <span className="flex-1 truncate">{displayValue || placeholder}</span>
+                </button>
 
-                        <select
-                            value={viewYear}
-                            onChange={(e) => setViewYear(Number(e.target.value))}
-                            className="input-field py-1.5 px-2 text-xs font-semibold max-w-[110px]"
-                            aria-label="Select year"
+                {open && (
+                    <div className="w-full sm:w-[280px]">
+                        <div
+                            ref={panelRef}
+                            className="absolute left-0 mt-2 w-full bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-[9999] max-h-[300px] overflow-y-auto p-3 animate-fade-in"
+                            role="dialog"
+                            aria-label="Month year picker"
                         >
-                            {yearOptions.map((year) => (
-                                <option key={year} value={year}>
-                                    {year}
-                                </option>
-                            ))}
-                        </select>
-
-                        <button
-                            type="button"
-                            onClick={() => setViewYear((y) => Math.min(currentYear, y + 1))}
-                            className="p-1 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] transition-colors"
-                            aria-label="Next year"
-                            disabled={viewYear >= currentYear}
-                        >
-                            <ChevronRight className={clsx("w-4 h-4", viewYear >= currentYear && "opacity-30")} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setViewYear((y) => Math.min(currentYear, y + 10))}
-                            className="p-1 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] transition-colors"
-                            aria-label="Next decade"
-                            disabled={viewYear >= currentYear}
-                        >
-                            <ChevronsRight className={clsx("w-4 h-4", viewYear >= currentYear && "opacity-30")} />
-                        </button>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-1.5">
-                        {monthShort.map((monthLabel, idx) => {
-                            const selected = parsed.year === viewYear && parsed.monthIndex === idx;
-                            const current = viewYear === currentYear && idx === currentMonth;
-                            const disabled = isFutureMonth(idx);
-
-                            return (
+                            <div className="flex items-center justify-between mb-3 gap-1">
                                 <button
-                                    key={`${monthLabel}-${idx}`}
-                                    data-month-index={idx}
                                     type="button"
-                                    disabled={disabled}
-                                    onClick={() => selectMonth(idx)}
-                                    onKeyDown={(event) => onMonthKeyNav(event, idx)}
-                                    className={clsx(
-                                        "px-2 py-2 rounded-lg text-xs font-medium transition-all duration-150",
-                                        disabled && "opacity-30 cursor-not-allowed",
-                                        selected
-                                            ? "bg-[var(--accent)] text-white shadow-sm"
-                                            : current
-                                                ? "bg-[var(--accent-subtle)] text-[var(--accent)] ring-1 ring-[var(--accent)]"
-                                                : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]",
-                                    )}
+                                    onClick={() => setViewYear((prev) => prev - 1)}
+                                    className="p-1 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] transition-colors"
+                                    aria-label="Previous year"
                                 >
-                                    {monthLabel}
+                                    <ChevronLeft className="w-4 h-4" />
                                 </button>
-                            );
-                        })}
-                    </div>
 
-                    <div className="flex items-center gap-2 mt-3 pt-2 border-t border-[var(--bg-border)]">
-                        <button
-                            type="button"
-                            className="text-2xs text-[var(--accent)] hover:underline"
-                            onClick={() => {
-                                onChange(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`);
-                                setOpen(false);
-                            }}
-                        >
-                            {locale === "hi" ? "इस महीने" : "This month"}
-                        </button>
-                        <span className="text-[var(--text-muted)]">·</span>
-                        <button
-                            type="button"
-                            className="text-2xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                            onClick={() => {
-                                onChange("");
-                                setOpen(false);
-                            }}
-                        >
-                            {locale === "hi" ? "साफ करें" : "Clear"}
-                        </button>
+                                <select
+                                    value={viewYear}
+                                    onChange={(e) => setViewYear(Number(e.target.value))}
+                                    className="input-field py-1.5 px-2 text-xs font-semibold max-w-[110px]"
+                                    aria-label="Select year"
+                                >
+                                    {yearOptions.map((year) => (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setViewYear((prev) => prev + 1)}
+                                    className="p-1 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--text-secondary)] transition-colors"
+                                    aria-label="Next year"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[200px] overflow-y-auto">
+                                {monthShort.map((monthLabel, idx) => {
+                                    const selected = parsed.year === viewYear && parsed.monthIndex === idx;
+                                    const current = viewYear === currentYear && idx === currentMonth;
+
+                                    return (
+                                        <button
+                                            key={`${monthLabel}-${idx}`}
+                                            data-month-index={idx}
+                                            type="button"
+                                            onClick={() => selectMonth(idx)}
+                                            onKeyDown={(event) => onMonthKeyNav(event, idx)}
+                                            className={clsx(
+                                                "px-2 py-2 rounded-lg text-xs font-medium transition-all duration-150",
+                                                selected
+                                                    ? "bg-[var(--accent)] text-white shadow-sm"
+                                                    : current
+                                                        ? "bg-[var(--accent-subtle)] text-[var(--accent)] ring-1 ring-[var(--accent)]"
+                                                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--text-primary)]",
+                                            )}
+                                        >
+                                            {monthLabel}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-3 pt-2 border-t border-[var(--bg-border)]">
+                                <button
+                                    type="button"
+                                    className="text-2xs text-[var(--accent)] hover:underline"
+                                    onClick={() => {
+                                        onChange(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`);
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {locale === "hi" ? "इस महीने" : "This month"}
+                                </button>
+                                <span className="text-[var(--text-muted)]">·</span>
+                                <button
+                                    type="button"
+                                    className="text-2xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                    onClick={() => {
+                                        onChange("");
+                                        setOpen(false);
+                                    }}
+                                >
+                                    {locale === "hi" ? "साफ करें" : "Clear"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {required && !value && (
                 <input

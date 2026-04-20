@@ -1,13 +1,16 @@
 """
 Centralised application configuration using Pydantic Settings.
 Loads values from environment variables and optionally a .env file.
+
+Embedding model: sentence-transformers/paraphrase-MiniLM-L3-v2 via HF Inference API (384-dim).
+STRICT_REAL_AI=true enforces no pseudo-embedding fallback.
 """
 
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import ClassVar, List
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,8 +24,10 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # ── CORS ──────────────────────────────────────────────────────────────────
+    # Add production frontend URL here when deploying
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
+        "http://127.0.0.1:3000",
     ]
 
     # ── Supabase ──────────────────────────────────────────────────────────────
@@ -31,19 +36,25 @@ class Settings(BaseSettings):
 
     # Groq (Open model inference)
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "llama-3.1-8b-instant"
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
     # Strict mode for production-grade behavior
     STRICT_REAL_AI: bool = True
 
     # ── Embeddings ────────────────────────────────────────────────────────────
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    EMBEDDING_DIMENSION: int = 384
+    # Model label used in logs/status. No local model is loaded in production.
+    EMBEDDING_MODEL: ClassVar[str] = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+    HF_API_BASE: str = "https://api-inference.huggingface.co/models"
+    EMBEDDING_DIMENSION: int = 384  # paraphrase-MiniLM-L3-v2 produces 384-dim vectors
+
+    # HuggingFace Inference API token — REQUIRED in production (STRICT_REAL_AI=true).
+    # No local model fallback; no pseudo-embedding fallback.
+    HF_API_TOKEN: str = ""
 
     # ── RAG ───────────────────────────────────────────────────────────────────
-    RAG_TOP_K: int = 8
-    CHUNK_SIZE: int = 600
-    CHUNK_OVERLAP: int = 100
+    RAG_TOP_K: int = 12   # Hard cap — retrieval never exceeds 12 chunks
+    CHUNK_SIZE: int = 1600  # ~400 token equivalents (4 chars/token estimate)
+    CHUNK_OVERLAP: int = 0   # Paragraph chunker uses natural boundaries, no overlap needed
 
     # ── Uploads ───────────────────────────────────────────────────────────────
     MAX_UPLOAD_SIZE_MB: int = 50
@@ -68,6 +79,17 @@ class Settings(BaseSettings):
                 return False
         return bool(value)
 
+    @model_validator(mode="after")
+    def validate_required_envs(self) -> 'Settings':
+        missing = []
+        if not self.SUPABASE_URL: missing.append("SUPABASE_URL")
+        if not self.SUPABASE_KEY: missing.append("SUPABASE_KEY")
+        if not self.GROQ_API_KEY: missing.append("GROQ_API_KEY")
+        if not self.HF_API_TOKEN: missing.append("HF_API_TOKEN")
+        if missing:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+        return self
+
     model_config = SettingsConfigDict(
         env_file=str(BASE_DIR / ".env"),
         env_file_encoding="utf-8",
@@ -79,4 +101,5 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()
+
 settings = get_settings()
